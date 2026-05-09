@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Http\Controllers\Dashboard;
+
+use App\Http\Controllers\Controller;
+use App\Models\Service;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class ServiceController extends Controller
+{
+    public function index()
+    {
+        return Inertia::render('Dashboard/Services/Index', [
+            'services' => Service::where('business_id', auth()->user()->business_id)
+                ->latest()
+                ->get(),
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Dashboard/Services/Create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'duration_minutes' => ['required', 'integer', 'min:5', 'max:480'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $validated['business_id'] = auth()->user()->business_id;
+
+        Service::create($validated);
+
+        return redirect()
+            ->route('dashboard.services.index')
+            ->with('success', 'Service created successfully.');
+    }
+
+    public function edit(Service $service)
+    {
+        $this->authorizeBusinessService($service);
+
+        return Inertia::render('Dashboard/Services/Edit', [
+            'service' => $service,
+        ]);
+    }
+
+    public function update(Request $request, Service $service)
+    {
+        $this->authorizeBusinessService($service);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'duration_minutes' => ['required', 'integer', 'min:5', 'max:480'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $service->update($validated);
+
+        return redirect()
+            ->route('dashboard.services.index')
+            ->with('success', 'Service updated successfully.');
+    }
+
+    public function destroy(Service $service)
+    {
+        $this->authorizeBusinessService($service);
+        $service->delete();
+
+        return redirect()
+            ->route('dashboard.services.index')
+            ->with('success', 'Service deleted successfully.');
+    }
+
+    private function authorizeBusinessService(Service $service) : void
+    {
+        abort_if($service->business_id !== auth()->user()->business_id, 403);
+    }
+}
