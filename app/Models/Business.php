@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Service;
+use App\Models\BusinessAvailability;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,4 +36,8 @@ class Business extends Model
         return $this->hasMany(Service::class);
     }
 
+    public function availabilites() : HasMany
+    {
+        return $this->hasMany(BusinessAvailability::class);
+    }
 }

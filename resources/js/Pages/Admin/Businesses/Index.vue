@@ -32,19 +32,27 @@ const deleteBusiness = (id: number) => {
             Businesses
         </template>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-start">
             <div>
                 <h3 class="fw-bold mb-1">Business Management</h3>
+
                 <p class="text-muted mb-0">
                     Create and manage businesses using the Slotify platform.
                 </p>
             </div>
+        </div>
 
-            <Link :href="route('admin.businesses.create')" class="admin-primary-btn">
+        <div class="mt-3">
+            <Link
+                :href="route('admin.businesses.create')"
+                class="admin-primary-btn"
+            >
                 <i class="bi bi-plus-lg me-2"></i>
                 Create Business
             </Link>
         </div>
+    </div>
 
         <div class="admin-card">
             <table class="admin-table">

@@ -35,19 +35,25 @@ const deleteManager = (id: number) => {
         <template #title>
             Managers
         </template>
-         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h3 class="fw-bold mb-1">Manager Accounts</h3>
-                <p class="text-muted mb-0">
-                    Create and manage business managers across Slotify.
-                </p>
-            </div>
 
-            <Link :href="route('admin.managers.create')" class="admin-primary-btn">
+       <div class="mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Manager Accounts</h3>
+            <p class="text-muted mb-0">
+                Create and manage business managers across Slotify.
+            </p>
+        </div>
+
+        <div class="mt-3">
+            <Link
+                :href="route('admin.managers.create')"
+                class="admin-primary-btn"
+            >
                 <i class="bi bi-person-plus me-2"></i>
                 Create Manager
             </Link>
         </div>
+    </div>
 
         <div class="admin-card">
             <table class="admin-table">

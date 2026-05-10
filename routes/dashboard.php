@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Dashboard\ServiceController;
-
+use App\Http\Controllers\Dashboard\AvailabilityController;
 
 Route::middleware(['auth', 'manager'])
     ->get('/dashboard', function() {
@@ -21,4 +21,9 @@ Route::middleware(['auth', 'manager'])
     ->name('dashboard.')
     ->group(function () {
         Route::resource('services', ServiceController::class);
+        Route::get('/availability', [AvailabilityController::class, 'index'])
+            ->name('availability.index');
+        Route::put('/availability', [AvailabilityController::class, 'update'])
+            ->name('availability.update');
     });
+

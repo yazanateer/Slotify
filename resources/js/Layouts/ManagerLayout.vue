@@ -6,8 +6,8 @@ const page = usePage();
 const navItems = [
     { label: 'Dashboard', routeName: 'dashboard', icon: 'bi-grid-1x2' },
     { label: 'Appointments', routeName: 'dashboard', icon: 'bi-calendar-check' },
-    { label: 'Services', routeName: 'dashboard', icon: 'bi-briefcase' },
-    { label: 'Availability', routeName: 'dashboard', icon: 'bi-clock' },
+    { label: 'Services', routeName: 'dashboard.services.index', icon: 'bi-briefcase' },
+    { label: 'Availability', routeName: 'dashboard.availability.index', icon: 'bi-clock' },
     { label: 'Booking Link', routeName: 'dashboard', icon: 'bi-link-45deg' },
 ];
 
