@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Dashboard\ServiceController;
 use App\Http\Controllers\Dashboard\AvailabilityController;
+use App\Http\Controllers\Dashboard\AppointmentController;
 
 Route::middleware(['auth', 'manager'])
     ->get('/dashboard', function() {
@@ -25,5 +26,7 @@ Route::middleware(['auth', 'manager'])
             ->name('availability.index');
         Route::put('/availability', [AvailabilityController::class, 'update'])
             ->name('availability.update');
+        Route::get('/appointments', [AppointmentController::class, 'index'])
+            ->name('appointments.index');
     });
 

@@ -4,36 +4,38 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Business;
-use App\Models\Appointment;
+use App\Models\Service;
+use App\Models\BusinessAvailability;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-
-class Service extends Model
+class Appointment extends Model
 {
     use HasFactory, Notifiable;
 
     protected $fillable = [
         'business_id',
-        'name',
-        'description',
-        'duration_minutes',
-        'price',
-        'color',
-        'is_active',
+        'service_id',
+        'customer_name',
+        'customer_phone',
+        'customer_email',
+        'appointment_date',
+        'start_time',
+        'end_time',
+        'status',
+        'notes',
     ];
-
-
+    
     public function business() : BelongsTo
     {
         return $this->belongsTo(Business::class);
     }
 
-    public function appointments() : HasMany
+    public function service() : BelongsTo
     {
-        return $this->hasMany(Appointment::class);
+        return $this->belongsTo(Service::class);
     }
     
 }
