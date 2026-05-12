@@ -29,6 +29,8 @@ Route::get('/book/{business:slug}', [BookingController::class, 'show'])
     ->name('booking.show');
 Route::get('/book/{business:slug}/slots', [BookingController::class, 'slots'])
     ->name('booking.slots');
+Route::post('/book/{business:slug}/appointments', [BookingController::class, 'store'])
+    ->name('booking.appointments.store');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';

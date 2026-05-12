@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\Appointment;
 use Carbon\Carbon;
 
+
 class BookingController extends Controller
 {
   public function show(Business $business)
@@ -17,6 +18,10 @@ class BookingController extends Controller
             'services' => $business->services()
                 ->where('is_active', true)
                 ->get(),
+            'availabilityDays' => $business->availabilities()
+                ->where('is_active', true)
+                ->pluck('day_of_week')
+                ->values(),
         ]);
     }
 
@@ -75,11 +80,74 @@ class BookingController extends Controller
             ];
         }
 
-        $start->addMinutes(15);
+        $start->addMinutes($service->duration_minutes);
     }
 
     return response()->json([
         'slots' => $slots,
     ]);
+    }
+
+    public function store(Request $request, Business $business)
+    {
+        $validated = $request->validate([
+            'service_id' => ['required', 'exists:services,id'],
+            'appointment_date' => ['required', 'date'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i'],
+            'customer_name' => ['required', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:255'],
+            'customer_email' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $service = $business->services()
+            ->where('id', $validated['service_id'])
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $date = Carbon::parse($validated['appointment_date']);
+        $dayOfWeek = $date->dayOfWeek;
+
+        $availability = $business->availabilities()
+            ->where('day_of_week', $dayOfWeek)
+            ->where('is_active', true)
+            ->firstOrFail();
+        
+        $slotStart = Carbon::parse($date->toDateString() . ' ' . $validated['start_time']);
+        $slotEnd = Carbon::parse($date->toDateString() . ' ' . $validated['end_time']);
+
+        $businessStart = Carbon::parse($date->toDateString() . ' ' . $availability->start_time);
+        $businessEnd = Carbon::parse($date->toDateString() . ' ' . $availability->end_time);
+
+        abort_if($slotStart->lt($businessStart) || $slotEnd->gt($businessEnd), 422);
+        abort_if($slotStart->copy()->addMinutes($service->duration_minutes)->format('H:i') !== $slotEnd->format('H:i'),422);
+
+        $hasConflict = Appointment::where('business_id', $business->id)
+            ->where('appointment_date', $date->toDateString())
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where(function ($query) use ($validated) {
+                $query->where('start_time', '<', $validated['end_time'])
+                    ->where('end_time', '>', $validated['start_time']);
+            })
+            ->exists();
+
+        abort_if($hasConflict, 409, 'This appointment slot is no longer available.');
+
+        $appointment = Appointment::create([
+            'business_id' => $business->id,
+            'service_id' => $service->id,
+            'customer_name' => $validated['customer_name'],
+            'customer_phone' => $validated['customer_phone'],
+            'customer_email' => $validated['customer_email'] ?? null,
+            'appointment_date' => $date->toDateString(),
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
+            'status' => 'confirmed',
+        ]);
+
+        return response()->json([
+            'message' => 'Appointment booked successfully.',
+            'appointment' => $appointment->load('service'),
+        ]);
     }
 }

@@ -31,6 +31,7 @@ type Slot = {
 const props = defineProps<{
     business: Business;
     services: Service[];
+    availabilityDays: number[];
 }>();
 
 const currentStep = ref<'booking' | 'details'>('booking');
@@ -39,23 +40,15 @@ const customerName = ref('');
 const customerPhone = ref('');
 const customerEmail = ref('');
 
-const goToDetails = () => {
-    if (!selectedService.value || !selectedDate.value || !selectedSlot.value) return;
-
-    currentStep.value = 'details';
-
-    window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: 'smooth',
-    });
-};
-
-
 const selectedServiceId = ref<number | null>(null);
 const selectedDate = ref<string>('');
 const slots = ref<Slot[]>([]);
 const selectedSlot = ref<Slot | null>(null);
 const loadingSlots = ref(false);
+
+const bookingSuccess = ref(false);
+const bookingError = ref('');
+const confirming = ref(false);
 
 const selectedService = computed(() => {
     return props.services.find((service) => service.id === selectedServiceId.value) ?? null;
@@ -70,6 +63,7 @@ const canLoadSlots = computed(() => {
 const selectService = (service: Service) => {
     selectedServiceId.value = service.id;
     selectedSlot.value = null;
+    currentStep.value = 'booking';
 };
 
 const selectSlot = (slot: Slot) => {
@@ -105,6 +99,69 @@ const loadSlots = async () => {
 watch([selectedServiceId, selectedDate], () => {
     loadSlots();
 });
+
+const goToDetails = () => {
+    if (!selectedService.value || !selectedDate.value || !selectedSlot.value) return;
+
+    currentStep.value = 'details';
+};
+
+const confirmAppointment = async () => {
+    if (!selectedService.value || !selectedDate.value || !selectedSlot.value) return;
+
+    bookingError.value = '';
+    confirming.value = true;
+
+    try {
+        await axios.post(route('booking.appointments.store', props.business.slug), {
+            service_id: selectedService.value.id,
+            appointment_date: selectedDate.value,
+            start_time: selectedSlot.value.start_time,
+            end_time: selectedSlot.value.end_time,
+            customer_name: customerName.value,
+            customer_phone: customerPhone.value,
+            customer_email: customerEmail.value || null,
+        });
+
+        bookingSuccess.value = true;
+    } catch (error: any) {
+        bookingError.value =
+            error.response?.data?.message || 'Something went wrong. Please try again.';
+    } finally {
+        confirming.value = false;
+    }
+};
+
+const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+const nextSevenDays = computed(() => {
+    const days = [];
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+
+        const dayOfWeek = date.getDay();
+        const isOpen = props.availabilityDays.includes(dayOfWeek);
+
+        days.push({
+            date: formatDate(date),
+            dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+            dayNumber: date.getDate(),
+            month: date.toLocaleDateString('en-US', { month: 'short' }),
+            isOpen,
+        });
+    }
+
+    return days;
+});
+
 </script>
 
 <template>
@@ -146,7 +203,7 @@ watch([selectedServiceId, selectedDate], () => {
                 </div>
             </div>
 
-            <div class="booking-card">
+            <div v-if="!bookingSuccess" class="booking-card">
                 <div class="booking-card-header">
                     <div>
                         <h2>Select a Service</h2>
@@ -197,7 +254,7 @@ watch([selectedServiceId, selectedDate], () => {
                 </div>
             </div>
 
-            <div class="booking-card">
+            <div v-if="!bookingSuccess" class="booking-card">
                 <div class="booking-card-header">
                     <div>
                         <h2>Choose Date</h2>
@@ -207,20 +264,35 @@ watch([selectedServiceId, selectedDate], () => {
                     <span class="booking-step">Step 2 of 3</span>
                 </div>
 
-                <input
-                    v-model="selectedDate"
-                    type="date"
-                    class="booking-date-input"
-                    :min="today"
-                    :disabled="!selectedService"
-                />
+            <div class="booking-date-grid">
+                <button
+                    v-for="day in nextSevenDays"
+                    :key="day.date"
+                    type="button"
+                    class="booking-date-option"
+                    :class="{
+                        'booking-date-option--selected': selectedDate === day.date,
+                        'booking-date-option--closed': !day.isOpen || !selectedService,
+                    }"
+                    :disabled="!day.isOpen || !selectedService"
+                    @click="selectedDate = day.date"
+                >
+                    <span>{{ day.dayName }}</span>
+                    <strong>{{ day.dayNumber }}</strong>
+                    <small>{{ day.month }}</small>
+
+                    <em>
+                        {{ day.isOpen ? 'Open' : 'Closed' }}
+                    </em>
+                </button>
+            </div>
 
                 <p v-if="!selectedService" class="booking-helper">
                     Select a service first to unlock date selection.
                 </p>
             </div>
 
-            <div class="booking-card">
+            <div v-if="!bookingSuccess" class="booking-card">
                 <div class="booking-card-header">
                     <div>
                         <h2>Available Times</h2>
@@ -293,7 +365,20 @@ watch([selectedServiceId, selectedDate], () => {
                         <i class="bi bi-arrow-right"></i>
                     </button>
                 </div>
-                    <div v-if="currentStep === 'details'" class="booking-card">
+            </div>
+
+            <div v-if="currentStep === 'details'" class="booking-modal-backdrop">
+                <div class="booking-modal">
+                    <button
+                        v-if="!bookingSuccess"
+                        type="button"
+                        class="booking-modal-close"
+                        @click="currentStep = 'booking'"
+                    >
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+
+                    <div v-if="!bookingSuccess">
                         <div class="booking-card-header">
                             <div>
                                 <h2>Your Details</h2>
@@ -337,22 +422,14 @@ watch([selectedServiceId, selectedDate], () => {
 
                         <div class="booking-summary-box">
                             <h3>Appointment Summary</h3>
-
-                            <p>
-                                <strong>Service:</strong>
-                                {{ selectedService?.name }}
-                            </p>
-
-                            <p>
-                                <strong>Date:</strong>
-                                {{ selectedDate }}
-                            </p>
-
-                            <p>
-                                <strong>Time:</strong>
-                                {{ selectedSlot?.label }}
-                            </p>
+                            <p><strong>Service:</strong> {{ selectedService?.name }}</p>
+                            <p><strong>Date:</strong> {{ selectedDate }}</p>
+                            <p><strong>Time:</strong> {{ selectedSlot?.label }}</p>
                         </div>
+
+                        <p v-if="bookingError" class="text-danger fw-semibold mt-3 mb-0">
+                            {{ bookingError }}
+                        </p>
 
                         <div class="booking-actions">
                             <button
@@ -366,13 +443,36 @@ watch([selectedServiceId, selectedDate], () => {
                             <button
                                 type="button"
                                 class="booking-primary-btn"
-                                :disabled="!customerName || !customerPhone"
+                                :disabled="!customerName || !customerPhone || confirming"
+                                @click="confirmAppointment"
                             >
-                                Confirm Appointment
+                                {{ confirming ? 'Confirming...' : 'Confirm Appointment' }}
                                 <i class="bi bi-check2-circle"></i>
                             </button>
                         </div>
                     </div>
+
+                    <div v-else class="text-center">
+                        <i
+                            class="bi bi-check-circle-fill"
+                            style="font-size: 56px; color: #16a34a;"
+                        ></i>
+
+                        <h2 class="mt-3">Appointment Confirmed</h2>
+
+                        <p class="text-muted">
+                            Your appointment has been booked successfully.
+                        </p>
+
+                        <div class="booking-summary-box text-start">
+                            <p><strong>Service:</strong> {{ selectedService?.name }}</p>
+                            <p><strong>Date:</strong> {{ selectedDate }}</p>
+                            <p><strong>Time:</strong> {{ selectedSlot?.label }}</p>
+                            <p><strong>Name:</strong> {{ customerName }}</p>
+                            <p><strong>Phone:</strong> {{ customerPhone }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -591,7 +691,8 @@ watch([selectedServiceId, selectedDate], () => {
     background: #ffffff;
 }
 
-.booking-date-input:focus {
+.booking-date-input:focus,
+.booking-input:focus {
     outline: none;
     border-color: #2563ff;
     box-shadow: 0 0 0 4px rgba(37, 99, 255, 0.1);
@@ -693,37 +794,6 @@ watch([selectedServiceId, selectedDate], () => {
     cursor: not-allowed;
 }
 
-@media (max-width: 768px) {
-    .booking-hero,
-    .booking-card {
-        padding: 24px;
-        border-radius: 24px;
-    }
-
-    .booking-brand {
-        align-items: flex-start;
-    }
-
-    .booking-brand h1 {
-        font-size: 26px;
-    }
-
-    .booking-card-header,
-    .booking-service,
-    .booking-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .booking-service-meta {
-        align-items: flex-start;
-    }
-
-    .booking-primary-btn {
-        justify-content: center;
-        width: 100%;
-    }
-}
 .booking-form-grid {
     display: grid;
     gap: 18px;
@@ -746,12 +816,6 @@ watch([selectedServiceId, selectedDate], () => {
     font-weight: 600;
     color: #071533;
     background: #ffffff;
-}
-
-.booking-input:focus {
-    outline: none;
-    border-color: #2563ff;
-    box-shadow: 0 0 0 4px rgba(37, 99, 255, 0.1);
 }
 
 .booking-summary-box {
@@ -780,5 +844,149 @@ watch([selectedServiceId, selectedDate], () => {
     background: #ffffff;
     color: #071533;
     font-weight: 850;
+}
+
+.booking-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(7, 21, 51, 0.55);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.booking-modal {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #e5ecf6;
+    border-radius: 30px;
+    padding: 32px;
+    box-shadow: 0 30px 80px rgba(7, 21, 51, 0.25);
+}
+
+.booking-modal-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #e5ecf6;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #071533;
+}
+
+.booking-modal-close:hover {
+    background: rgba(37, 99, 255, 0.08);
+    color: #2563ff;
+}
+
+@media (max-width: 768px) {
+    .booking-hero,
+    .booking-card,
+    .booking-modal {
+        padding: 24px;
+        border-radius: 24px;
+    }
+
+    .booking-brand {
+        align-items: flex-start;
+    }
+
+    .booking-brand h1 {
+        font-size: 26px;
+    }
+
+    .booking-card-header,
+    .booking-service,
+    .booking-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .booking-service-meta {
+        align-items: flex-start;
+    }
+
+    .booking-primary-btn {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+.booking-date-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+}
+
+.booking-date-option {
+    border: 1.5px solid #e5ecf6;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 16px 10px;
+    color: #071533;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: 0.18s ease;
+}
+
+.booking-date-option span {
+    font-size: 13px;
+    color: #6b7890;
+    font-weight: 800;
+}
+
+.booking-date-option strong {
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.booking-date-option small {
+    color: #6b7890;
+    font-weight: 700;
+}
+
+.booking-date-option em {
+    margin-top: 6px;
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 800;
+    color: #16a34a;
+}
+
+.booking-date-option:hover:not(:disabled),
+.booking-date-option--selected {
+    border-color: #2563ff;
+    background: rgba(37, 99, 255, 0.08);
+    color: #2563ff;
+}
+
+.booking-date-option--selected {
+    box-shadow: 0 14px 34px rgba(37, 99, 255, 0.12);
+}
+
+.booking-date-option--closed {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.booking-date-option--closed em {
+    color: #6b7890;
+}
+
+@media (max-width: 768px) {
+    .booking-date-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 </style>

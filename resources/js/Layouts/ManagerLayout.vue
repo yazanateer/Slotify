@@ -8,7 +8,7 @@ const navItems = [
     { label: 'Appointments', routeName: 'dashboard.appointments.index', icon: 'bi-calendar-check' },
     { label: 'Services', routeName: 'dashboard.services.index', icon: 'bi-briefcase' },
     { label: 'Availability', routeName: 'dashboard.availability.index', icon: 'bi-clock' },
-    { label: 'Booking Link', routeName: 'dashboard', icon: 'bi-link-45deg' },
+    // { label: 'Booking Link', routeName: 'dashboard', icon: 'bi-link-45deg' },
 ];
 
 const isActive = (routeName: string) => {
