@@ -24,7 +24,7 @@ class BookingController extends Controller
                 ->values(),
         ]);
     }
-
+    
     public function slots(Request $request, Business $business)
     {
     $validated = $request->validate([
@@ -40,39 +40,77 @@ class BookingController extends Controller
     $date = Carbon::parse($validated['date']);
     $dayOfWeek = $date->dayOfWeek; // 0 Sunday - 6 Saturday
 
-    $availability = $business->availabilities()
-        ->where('day_of_week', $dayOfWeek)
-        ->where('is_active', true)
+    // 1. Resolve business working hours
+    $dateOverride = $business->dateOverrides()
+        ->where('date', $date->toDateString())
         ->first();
 
-    if (! $availability) {
-        return response()->json([
-            'slots' => [],
-        ]);
+    if ($dateOverride) {
+        if (! $dateOverride->is_active) {
+            return response()->json([
+                'slots' => [],
+            ]);
+        }
+
+        $businessStart = Carbon::parse($date->toDateString() . ' ' . $dateOverride->start_time);
+        $businessEnd = Carbon::parse($date->toDateString() . ' ' . $dateOverride->end_time);
+    } else {
+        $availability = $business->availabilities()
+            ->where('day_of_week', $dayOfWeek)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $availability) {
+            return response()->json([
+                'slots' => [],
+            ]);
+        }
+
+        $businessStart = Carbon::parse($date->toDateString() . ' ' . $availability->start_time);
+        $businessEnd = Carbon::parse($date->toDateString() . ' ' . $availability->end_time);
     }
 
+    // 2. Get existing appointments
     $existingAppointments = Appointment::where('business_id', $business->id)
         ->where('appointment_date', $date->toDateString())
         ->whereIn('status', ['pending', 'confirmed'])
         ->get(['start_time', 'end_time']);
 
-    $slots = [];
+    // 3. Get breaks
+    $breaks = $business->availabilityBreaks()
+        ->where(function ($query) use ($date, $dayOfWeek) {
+            $query->where('date', $date->toDateString())
+                ->orWhere(function ($query) use ($dayOfWeek) {
+                    $query->whereNull('date')
+                        ->where('day_of_week', $dayOfWeek);
+                });
+        })
+        ->get();
 
-    $start = Carbon::parse($date->toDateString() . ' ' . $availability->start_time);
-    $end = Carbon::parse($date->toDateString() . ' ' . $availability->end_time);
+    // 4. Generate slots
+    $slots = [];
+    $start = $businessStart->copy();
+    $end = $businessEnd->copy();
 
     while ($start->copy()->addMinutes($service->duration_minutes)->lte($end)) {
         $slotStart = $start->copy();
         $slotEnd = $start->copy()->addMinutes($service->duration_minutes);
 
-        $hasConflict = $existingAppointments->contains(function ($appointment) use ($slotStart, $slotEnd, $date) {
+        $hasAppointmentConflict = $existingAppointments->contains(function ($appointment) use ($slotStart, $slotEnd, $date) {
             $appointmentStart = Carbon::parse($date->toDateString() . ' ' . $appointment->start_time);
             $appointmentEnd = Carbon::parse($date->toDateString() . ' ' . $appointment->end_time);
 
             return $slotStart->lt($appointmentEnd) && $slotEnd->gt($appointmentStart);
         });
 
-        if (! $hasConflict) {
+        $hasBreakConflict = $breaks->contains(function ($break) use ($slotStart, $slotEnd, $date) {
+            $breakStart = Carbon::parse($date->toDateString() . ' ' . $break->start_time);
+            $breakEnd = Carbon::parse($date->toDateString() . ' ' . $break->end_time);
+
+            return $slotStart->lt($breakEnd) && $slotEnd->gt($breakStart);
+        });
+
+        if (! $hasAppointmentConflict && ! $hasBreakConflict) {
             $slots[] = [
                 'start_time' => $slotStart->format('H:i'),
                 'end_time' => $slotEnd->format('H:i'),
@@ -86,7 +124,7 @@ class BookingController extends Controller
     return response()->json([
         'slots' => $slots,
     ]);
-    }
+}
 
     public function store(Request $request, Business $business)
     {

@@ -3,19 +3,21 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\BusinessAvailability;
+use App\Models\BusinessAvailabilityBreak;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\BusinessAvailability;
 
 class AvailabilityController extends Controller
 {
     public function index()
     {
         $businessId = auth()->user()->business_id;
+
         $existing = BusinessAvailability::where('business_id', $businessId)
             ->get()
             ->keyBy('day_of_week');
-        
+
         $days = collect([
             ['day_of_week' => 0, 'label' => 'Sunday'],
             ['day_of_week' => 1, 'label' => 'Monday'],
@@ -26,6 +28,7 @@ class AvailabilityController extends Controller
             ['day_of_week' => 6, 'label' => 'Saturday'],
         ])->map(function ($day) use ($existing) {
             $availability = $existing->get($day['day_of_week']);
+
             return [
                 'day_of_week' => $day['day_of_week'],
                 'label' => $day['label'],
@@ -35,8 +38,22 @@ class AvailabilityController extends Controller
             ];
         });
 
+        $breaks = BusinessAvailabilityBreak::where('business_id', $businessId)
+            ->whereNull('date')
+            ->get()
+            ->map(function ($break) {
+                return [
+                    'id' => $break->id,
+                    'day_of_week' => $break->day_of_week,
+                    'date' => $break->date,
+                    'start_time' => substr($break->start_time, 0, 5),
+                    'end_time' => substr($break->end_time, 0, 5),
+                ];
+            });
+
         return Inertia::render('Dashboard/Availability/Index', [
             'days' => $days,
+            'breaks' => $breaks,
         ]);
     }
 
@@ -48,9 +65,37 @@ class AvailabilityController extends Controller
             'days.*.is_active' => ['required', 'boolean'],
             'days.*.start_time' => ['nullable', 'date_format:H:i'],
             'days.*.end_time' => ['nullable', 'date_format:H:i'],
+
+            'breaks' => ['nullable', 'array'],
+            'breaks.*.id' => ['nullable', 'integer'],
+            'breaks.*.day_of_week' => ['nullable', 'integer', 'between:0,6'],
+            'breaks.*.date' => ['nullable', 'date'],
+            'breaks.*.start_time' => ['required_with:breaks', 'date_format:H:i'],
+            'breaks.*.end_time' => ['required_with:breaks', 'date_format:H:i'],
         ]);
 
+        $daysByWeek = collect($validated['days'])->keyBy('day_of_week');
+        foreach ($validated['breaks'] ?? [] as $break) {
+            $day = $daysByWeek->get($break['day_of_week']);
+
+            if (! $day || ! $day['is_active']) {
+                return back()->withErrors([
+                    'breaks' => 'Breaks can only be added to open working days.',
+                ]);
+            }
+
+            if (
+                $break['start_time'] < $day['start_time'] ||
+                $break['end_time'] > $day['end_time'] ||
+                $break['start_time'] >= $break['end_time']
+            ) {
+                return back()->withErrors([
+                    'breaks' => 'Break times must be inside working hours and start before end.',
+                ]);
+            }
+        }
         $businessId = auth()->user()->business_id;
+
         foreach ($validated['days'] as $day) {
             BusinessAvailability::updateOrCreate(
                 [
@@ -63,6 +108,20 @@ class AvailabilityController extends Controller
                     'end_time' => $day['is_active'] ? $day['end_time'] : null,
                 ]
             );
+        }
+
+        BusinessAvailabilityBreak::where('business_id', $businessId)
+            ->whereNull('date')
+            ->delete();
+
+        foreach ($validated['breaks'] ?? [] as $break) {
+            BusinessAvailabilityBreak::create([
+                'business_id' => $businessId,
+                'day_of_week' => $break['day_of_week'],
+                'date' => null,
+                'start_time' => $break['start_time'],
+                'end_time' => $break['end_time'],
+            ]);
         }
 
         return redirect()

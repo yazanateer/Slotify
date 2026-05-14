@@ -2,6 +2,11 @@
 import { Head } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
+import '@/../../resources/css/Pages/booking.css';
+import BookingDetailsModal from '@/../../resources/js/Components/Booking/BookingDetailsModal.vue';
+import { useI18n } from 'vue-i18n';
+const {t} = useI18n();
+
 
 type Business = {
     id: number;
@@ -140,27 +145,56 @@ const formatDate = (date: Date) => {
     return `${year}-${month}-${day}`;
 };
 
-const nextSevenDays = computed(() => {
+const availablePage = ref(0);
+const availableDaysPerPage = 7;
+const availableSearchRange = 30; // next 30 days
+
+const allAvailableDays = computed(() => {
     const days = [];
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < availableSearchRange; i++) {
         const date = new Date();
         date.setDate(date.getDate() + i);
 
         const dayOfWeek = date.getDay();
-        const isOpen = props.availabilityDays.includes(dayOfWeek);
+
+        if (!props.availabilityDays.includes(dayOfWeek)) {
+            continue;
+        }
 
         days.push({
             date: formatDate(date),
             dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
             dayNumber: date.getDate(),
             month: date.toLocaleDateString('en-US', { month: 'short' }),
-            isOpen,
         });
     }
 
     return days;
 });
+
+const visibleAvailableDays = computed(() => {
+    const start = availablePage.value * availableDaysPerPage;
+    return allAvailableDays.value.slice(start, start + availableDaysPerPage);
+});
+
+const canGoPrevDays = computed(() => availablePage.value > 0);
+
+const canGoNextDays = computed(() => {
+    return (availablePage.value + 1) * availableDaysPerPage < allAvailableDays.value.length;
+});
+
+const nextAvailableDaysPage = () => {
+    if (canGoNextDays.value) {
+        availablePage.value++;
+    }
+};
+
+const prevAvailableDaysPage = () => {
+    if (canGoPrevDays.value) {
+        availablePage.value--;
+    }
+};
 
 </script>
 
@@ -264,31 +298,52 @@ const nextSevenDays = computed(() => {
                     <span class="booking-step">Step 2 of 3</span>
                 </div>
 
-            <div class="booking-date-grid">
-                <button
-                    v-for="day in nextSevenDays"
-                    :key="day.date"
-                    type="button"
-                    class="booking-date-option"
-                    :class="{
-                        'booking-date-option--selected': selectedDate === day.date,
-                        'booking-date-option--closed': !day.isOpen || !selectedService,
-                    }"
-                    :disabled="!day.isOpen || !selectedService"
-                    @click="selectedDate = day.date"
-                >
-                    <span>{{ day.dayName }}</span>
-                    <strong>{{ day.dayNumber }}</strong>
-                    <small>{{ day.month }}</small>
+                <div class="booking-date-carousel">
+                    <button
+                        type="button"
+                        class="booking-date-arrow"
+                        :disabled="!canGoPrevDays"
+                        @click="prevAvailableDaysPage"
+                    >
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
 
-                    <em>
-                        {{ day.isOpen ? 'Open' : 'Closed' }}
-                    </em>
-                </button>
-            </div>
+                    <div class="booking-date-grid">
+                        <button
+                            v-for="day in visibleAvailableDays"
+                            :key="day.date"
+                            type="button"
+                            class="booking-date-option"
+                            :class="{
+                                'booking-date-option--selected': selectedDate === day.date,
+                                'booking-date-option--closed': !selectedService,
+                            }"
+                            :disabled="!selectedService"
+                            @click="selectedDate = day.date"
+                        >
+                            <span>{{ day.dayName }}</span>
+                            <strong>{{ day.dayNumber }}</strong>
+                            <small>{{ day.month }}</small>
+                            <em>Available</em>
+                        </button>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="booking-date-arrow"
+                        :disabled="!canGoNextDays"
+                        @click="nextAvailableDaysPage"
+                    >
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
 
                 <p v-if="!selectedService" class="booking-helper">
                     Select a service first to unlock date selection.
+                </p>
+
+                <p v-if="selectedService && allAvailableDays.length === 0" class="booking-helper">
+                    No available booking days found.
                 </p>
             </div>
 
@@ -367,626 +422,20 @@ const nextSevenDays = computed(() => {
                 </div>
             </div>
 
-            <div v-if="currentStep === 'details'" class="booking-modal-backdrop">
-                <div class="booking-modal">
-                    <button
-                        v-if="!bookingSuccess"
-                        type="button"
-                        class="booking-modal-close"
-                        @click="currentStep = 'booking'"
-                    >
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-
-                    <div v-if="!bookingSuccess">
-                        <div class="booking-card-header">
-                            <div>
-                                <h2>Your Details</h2>
-                                <p>Enter your information to confirm the appointment.</p>
-                            </div>
-
-                            <span class="booking-step">Final Step</span>
-                        </div>
-
-                        <div class="booking-form-grid">
-                            <div>
-                                <label class="booking-label">Full Name</label>
-                                <input
-                                    v-model="customerName"
-                                    type="text"
-                                    class="booking-input"
-                                    placeholder="Enter your name"
-                                />
-                            </div>
-
-                            <div>
-                                <label class="booking-label">Phone Number</label>
-                                <input
-                                    v-model="customerPhone"
-                                    type="tel"
-                                    class="booking-input"
-                                    placeholder="05X-XXXXXXX"
-                                />
-                            </div>
-
-                            <div>
-                                <label class="booking-label">Email Optional</label>
-                                <input
-                                    v-model="customerEmail"
-                                    type="email"
-                                    class="booking-input"
-                                    placeholder="you@example.com"
-                                />
-                            </div>
-                        </div>
-
-                        <div class="booking-summary-box">
-                            <h3>Appointment Summary</h3>
-                            <p><strong>Service:</strong> {{ selectedService?.name }}</p>
-                            <p><strong>Date:</strong> {{ selectedDate }}</p>
-                            <p><strong>Time:</strong> {{ selectedSlot?.label }}</p>
-                        </div>
-
-                        <p v-if="bookingError" class="text-danger fw-semibold mt-3 mb-0">
-                            {{ bookingError }}
-                        </p>
-
-                        <div class="booking-actions">
-                            <button
-                                type="button"
-                                class="booking-secondary-btn"
-                                @click="currentStep = 'booking'"
-                            >
-                                Back
-                            </button>
-
-                            <button
-                                type="button"
-                                class="booking-primary-btn"
-                                :disabled="!customerName || !customerPhone || confirming"
-                                @click="confirmAppointment"
-                            >
-                                {{ confirming ? 'Confirming...' : 'Confirm Appointment' }}
-                                <i class="bi bi-check2-circle"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div v-else class="text-center">
-                        <i
-                            class="bi bi-check-circle-fill"
-                            style="font-size: 56px; color: #16a34a;"
-                        ></i>
-
-                        <h2 class="mt-3">Appointment Confirmed</h2>
-
-                        <p class="text-muted">
-                            Your appointment has been booked successfully.
-                        </p>
-
-                        <div class="booking-summary-box text-start">
-                            <p><strong>Service:</strong> {{ selectedService?.name }}</p>
-                            <p><strong>Date:</strong> {{ selectedDate }}</p>
-                            <p><strong>Time:</strong> {{ selectedSlot?.label }}</p>
-                            <p><strong>Name:</strong> {{ customerName }}</p>
-                            <p><strong>Phone:</strong> {{ customerPhone }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <BookingDetailsModal
+                v-if="currentStep === 'details'"
+                v-model:customer-name="customerName"
+                v-model:customer-phone="customerPhone"
+                v-model:customer-email="customerEmail"
+                :booking-success="bookingSuccess"
+                :booking-error="bookingError"
+                :confirming="confirming"
+                :selected-service="selectedService"
+                :selected-date="selectedDate"
+                :selected-slot="selectedSlot"
+                @close="currentStep = 'booking'"
+                @confirm="confirmAppointment"
+            />
         </div>
     </div>
 </template>
-
-<style scoped>
-.booking-page {
-    min-height: 100vh;
-    background:
-        radial-gradient(circle at top right, rgba(37, 99, 255, 0.14), transparent 32%),
-        linear-gradient(135deg, #f8fbff 0%, #f4f7fb 100%);
-    padding: 40px 16px;
-    color: #071533;
-}
-
-.booking-shell {
-    max-width: 920px;
-    margin: 0 auto;
-}
-
-.booking-hero,
-.booking-card {
-    background: #ffffff;
-    border: 1px solid #e5ecf6;
-    border-radius: 30px;
-    padding: 32px;
-    box-shadow: 0 18px 45px rgba(7, 21, 51, 0.08);
-    margin-bottom: 24px;
-}
-
-.booking-brand {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
-
-.booking-logo {
-    width: 72px;
-    height: 72px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, #2563ff, #3b82f6);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 30px;
-    font-weight: 900;
-    box-shadow: 0 16px 34px rgba(37, 99, 255, 0.24);
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.booking-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.booking-eyebrow {
-    margin: 0 0 6px;
-    color: #2563ff;
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
-.booking-brand h1 {
-    margin: 0;
-    font-size: 34px;
-    font-weight: 900;
-    letter-spacing: -0.03em;
-}
-
-.booking-subtitle,
-.booking-card-header p,
-.booking-helper {
-    color: #6b7890;
-}
-
-.booking-subtitle {
-    margin: 8px 0 0;
-}
-
-.booking-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 24px;
-    color: #6b7890;
-    font-size: 14px;
-}
-
-.booking-info span {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: #f4f7fb;
-    border: 1px solid #e5ecf6;
-    border-radius: 999px;
-    padding: 8px 12px;
-}
-
-.booking-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 18px;
-    margin-bottom: 24px;
-}
-
-.booking-card-header h2 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 900;
-}
-
-.booking-card-header p {
-    margin: 6px 0 0;
-}
-
-.booking-step {
-    background: rgba(37, 99, 255, 0.09);
-    color: #2563ff;
-    border: 1px solid rgba(37, 99, 255, 0.16);
-    border-radius: 999px;
-    padding: 7px 13px;
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.booking-services,
-.booking-slots {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.booking-service {
-    width: 100%;
-    border: 1.5px solid #e5ecf6;
-    background: #ffffff;
-    border-radius: 22px;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 18px;
-    text-align: left;
-    transition: 0.18s ease;
-    cursor: pointer;
-}
-
-.booking-service:hover,
-.booking-service--selected {
-    border-color: #2563ff;
-    background: rgba(37, 99, 255, 0.07);
-}
-
-.booking-service--selected {
-    box-shadow: 0 14px 34px rgba(37, 99, 255, 0.1);
-}
-
-.booking-service-left {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-}
-
-.booking-service-dot {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    margin-top: 5px;
-    flex-shrink: 0;
-}
-
-.booking-service h3 {
-    margin: 0;
-    color: #071533;
-    font-size: 18px;
-    font-weight: 850;
-}
-
-.booking-service p {
-    margin: 6px 0 0;
-    color: #6b7890;
-    font-size: 14px;
-}
-
-.booking-service-meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 7px;
-    color: #6b7890;
-    white-space: nowrap;
-}
-
-.booking-service-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-}
-
-.booking-date-input {
-    width: 100%;
-    border: 1.5px solid #e5ecf6;
-    border-radius: 18px;
-    padding: 16px 18px;
-    font-size: 16px;
-    font-weight: 700;
-    color: #071533;
-    background: #ffffff;
-}
-
-.booking-date-input:focus,
-.booking-input:focus {
-    outline: none;
-    border-color: #2563ff;
-    box-shadow: 0 0 0 4px rgba(37, 99, 255, 0.1);
-}
-
-.booking-date-input:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.booking-helper {
-    margin: 12px 0 0;
-    font-size: 14px;
-}
-
-.booking-slot {
-    border: 1.5px solid #e5ecf6;
-    background: #ffffff;
-    color: #071533;
-    border-radius: 18px;
-    padding: 15px 18px;
-    font-weight: 800;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: 0.18s ease;
-}
-
-.booking-slot:hover,
-.booking-slot--selected {
-    border-color: #2563ff;
-    background: rgba(37, 99, 255, 0.07);
-    color: #2563ff;
-}
-
-.booking-slot--selected {
-    box-shadow: 0 14px 34px rgba(37, 99, 255, 0.1);
-}
-
-.booking-empty,
-.booking-loading {
-    text-align: center;
-    padding: 42px 20px;
-    color: #6b7890;
-}
-
-.small-empty {
-    padding: 30px 20px;
-}
-
-.booking-empty i,
-.booking-loading i {
-    font-size: 36px;
-    color: #2563ff;
-    margin-bottom: 12px;
-}
-
-.booking-empty h3 {
-    color: #071533;
-    font-weight: 850;
-}
-
-.booking-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 18px;
-    border-top: 1px solid #e5ecf6;
-    margin-top: 28px;
-    padding-top: 24px;
-}
-
-.booking-selected {
-    margin: 0 0 4px;
-    color: #071533;
-}
-
-.booking-primary-btn {
-    border: 0;
-    border-radius: 16px;
-    padding: 13px 22px;
-    background: linear-gradient(135deg, #2563ff, #3b82f6);
-    color: #ffffff;
-    font-weight: 850;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 16px 34px rgba(37, 99, 255, 0.24);
-    transition: 0.18s ease;
-}
-
-.booking-primary-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-}
-
-.booking-primary-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.booking-form-grid {
-    display: grid;
-    gap: 18px;
-}
-
-.booking-label {
-    display: block;
-    margin-bottom: 8px;
-    color: #071533;
-    font-weight: 800;
-    font-size: 14px;
-}
-
-.booking-input {
-    width: 100%;
-    border: 1.5px solid #e5ecf6;
-    border-radius: 18px;
-    padding: 16px 18px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #071533;
-    background: #ffffff;
-}
-
-.booking-summary-box {
-    margin-top: 24px;
-    background: #f4f7fb;
-    border: 1px solid #e5ecf6;
-    border-radius: 22px;
-    padding: 22px;
-}
-
-.booking-summary-box h3 {
-    margin: 0 0 14px;
-    font-size: 18px;
-    font-weight: 900;
-}
-
-.booking-summary-box p {
-    margin: 0 0 8px;
-    color: #071533;
-}
-
-.booking-secondary-btn {
-    border: 1.5px solid #e5ecf6;
-    border-radius: 16px;
-    padding: 13px 22px;
-    background: #ffffff;
-    color: #071533;
-    font-weight: 850;
-}
-
-.booking-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(7, 21, 51, 0.55);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-}
-
-.booking-modal {
-    position: relative;
-    width: 100%;
-    max-width: 720px;
-    max-height: 90vh;
-    overflow-y: auto;
-    background: #ffffff;
-    border: 1px solid #e5ecf6;
-    border-radius: 30px;
-    padding: 32px;
-    box-shadow: 0 30px 80px rgba(7, 21, 51, 0.25);
-}
-
-.booking-modal-close {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    width: 40px;
-    height: 40px;
-    border: 1px solid #e5ecf6;
-    border-radius: 14px;
-    background: #ffffff;
-    color: #071533;
-}
-
-.booking-modal-close:hover {
-    background: rgba(37, 99, 255, 0.08);
-    color: #2563ff;
-}
-
-@media (max-width: 768px) {
-    .booking-hero,
-    .booking-card,
-    .booking-modal {
-        padding: 24px;
-        border-radius: 24px;
-    }
-
-    .booking-brand {
-        align-items: flex-start;
-    }
-
-    .booking-brand h1 {
-        font-size: 26px;
-    }
-
-    .booking-card-header,
-    .booking-service,
-    .booking-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .booking-service-meta {
-        align-items: flex-start;
-    }
-
-    .booking-primary-btn {
-        justify-content: center;
-        width: 100%;
-    }
-}
-
-.booking-date-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
-}
-
-.booking-date-option {
-    border: 1.5px solid #e5ecf6;
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 16px 10px;
-    color: #071533;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    transition: 0.18s ease;
-}
-
-.booking-date-option span {
-    font-size: 13px;
-    color: #6b7890;
-    font-weight: 800;
-}
-
-.booking-date-option strong {
-    font-size: 24px;
-    font-weight: 900;
-}
-
-.booking-date-option small {
-    color: #6b7890;
-    font-weight: 700;
-}
-
-.booking-date-option em {
-    margin-top: 6px;
-    font-style: normal;
-    font-size: 11px;
-    font-weight: 800;
-    color: #16a34a;
-}
-
-.booking-date-option:hover:not(:disabled),
-.booking-date-option--selected {
-    border-color: #2563ff;
-    background: rgba(37, 99, 255, 0.08);
-    color: #2563ff;
-}
-
-.booking-date-option--selected {
-    box-shadow: 0 14px 34px rgba(37, 99, 255, 0.12);
-}
-
-.booking-date-option--closed {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.booking-date-option--closed em {
-    color: #6b7890;
-}
-
-@media (max-width: 768px) {
-    .booking-date-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-</style>

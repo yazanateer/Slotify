@@ -2,7 +2,7 @@ import '../css/app.css';
 import './bootstrap';
 import '../css/admin.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-
+import i18n from './i18n';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -22,6 +22,7 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .use(i18n)
             .mount(el);
     },
     progress: {

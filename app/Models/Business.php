@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Service;
 use App\Models\Appointment;
 use App\Models\BusinessAvailability;
+use App\Models\BusinessDateOverride;
+use App\Models\BusinessAvailabilityBreak;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -45,5 +47,15 @@ class Business extends Model
     public function appointments() : HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function dateOverrides()
+    {
+    return $this->hasMany(BusinessDateOverride::class);
+    }
+
+    public function availabilityBreaks()
+    {
+        return $this->hasMany(BusinessAvailabilityBreak::class);
     }
 }
