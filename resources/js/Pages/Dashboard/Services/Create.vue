@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ManagerLayout from '@/Layouts/ManagerLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 const form = useForm({
     name: '',
@@ -11,23 +12,25 @@ const form = useForm({
     is_active: true,
 });
 
+const { t } = useI18n();
+
 const submit = () => {
     form.post(route('dashboard.services.store'));
 };
 </script>
 
 <template>
-    <Head title="Create Service" />
+    <Head :title="t('services.createService')" />
 
     <ManagerLayout>
         <template #title>
-            Create Service
+            {{ t('services.createService') }}
         </template>
 
         <div class="admin-card">
             <form @submit.prevent="submit">
                 <div class="admin-form-group">
-                    <label class="admin-label">Service Name</label>
+                    <label class="admin-label">{{ t('services.serviceName') }}</label>
 
                     <input
                         v-model="form.name"
@@ -41,7 +44,7 @@ const submit = () => {
                 </div>
 
                 <div class="admin-form-group">
-                    <label class="admin-label">Description</label>
+                    <label class="admin-label">{{ t('common.description') }}</label>
 
                     <textarea
                         v-model="form.description"
@@ -53,7 +56,7 @@ const submit = () => {
                 <div class="row">
                     <div class="col-md-4">
                         <div class="admin-form-group">
-                            <label class="admin-label">Duration (Minutes)</label>
+                            <label class="admin-label">{{ t('services.durationMinutes') }}</label>
 
                             <input
                                 v-model="form.duration_minutes"
@@ -65,7 +68,7 @@ const submit = () => {
 
                     <div class="col-md-4">
                         <div class="admin-form-group">
-                            <label class="admin-label">Price</label>
+                            <label class="admin-label">{{ t('services.price') }}</label>
 
                             <input
                                 v-model="form.price"
@@ -77,7 +80,7 @@ const submit = () => {
 
                     <div class="col-md-4">
                         <div class="admin-form-group">
-                            <label class="admin-label">Color</label>
+                            <label class="admin-label">{{ t('services.color') }}</label>
 
                             <input
                                 v-model="form.color"
@@ -97,7 +100,7 @@ const submit = () => {
                     />
 
                     <label for="is_active" class="form-check-label">
-                        Active
+                        {{ t('common.active') }}
                     </label>
                 </div>
 
@@ -106,14 +109,14 @@ const submit = () => {
                         class="admin-primary-btn"
                         :disabled="form.processing"
                     >
-                        Create Service
+                        {{ t('services.createService') }}
                     </button>
 
                     <Link
                         :href="route('dashboard.services.index')"
                         class="btn btn-light"
                     >
-                        Cancel
+                        {{ t('common.cancel') }}
                     </Link>
                 </div>
             </form>

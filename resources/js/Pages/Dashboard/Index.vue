@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import ManagerLayout from '@/Layouts/ManagerLayout.vue';
 import { Head } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+
 
 type Business = {
     id: number;
@@ -13,10 +15,13 @@ defineProps<{
     business: Business;
     bookingLink: string;
 }>();
+
+const { t } = useI18n();
+
 </script>
 
 <template>
-    <Head title="Business Dashboard" />
+    <Head :title="t('dashboard.title')" />
 
     <ManagerLayout>
         <template #title>
@@ -26,32 +31,32 @@ defineProps<{
         <div class="row g-4 mb-4">
             <div class="col-md-6 col-xl-3">
                 <div class="admin-card">
-                    <p class="text-muted mb-2">Today's Appointments</p>
+                    <p class="text-muted mb-2">{{ t('dashboard.todayAppointments') }}</p>
                     <h2 class="fw-bold mb-0">0</h2>
                 </div>
             </div>
 
             <div class="col-md-6 col-xl-3">
                 <div class="admin-card">
-                    <p class="text-muted mb-2">Customers</p>
+                    <p class="text-muted mb-2">{{ t('dashboard.customers') }}</p>
                     <h2 class="fw-bold mb-0">0</h2>
                 </div>
             </div>
 
             <div class="col-md-6 col-xl-3">
                 <div class="admin-card">
-                    <p class="text-muted mb-2">Services</p>
+                    <p class="text-muted mb-2">{{ t('dashboard.services') }}</p>
                     <h2 class="fw-bold mb-0">0</h2>
                 </div>
             </div>
 
             <div class="col-md-6 col-xl-3">
                 <div class="admin-card">
-                    <p class="text-muted mb-2">Business Status</p>
+                    <p class="text-muted mb-2">{{ t('dashboard.businessStatus') }}</p>
 
                     <div class="d-flex align-items-center gap-2">
                         <span class="admin-status-dot"></span>
-                        <strong>Active</strong>
+                        <strong>{{ t('common.active') }}</strong>
                     </div>
                 </div>
             </div>
@@ -60,10 +65,10 @@ defineProps<{
         <div class="admin-card mb-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h4 class="fw-bold mb-1">Public Booking Link</h4>
+                    <h4 class="fw-bold mb-1">{{ t('dashboard.publicBookingLink') }}</h4>
 
                     <p class="text-muted mb-0">
-                        Share this link with your customers so they can book appointments.
+                        {{ t('dashboard.bookingLinkDescription') }}
                     </p>
                 </div>
 
@@ -72,7 +77,7 @@ defineProps<{
                     @click="navigator.clipboard.writeText(bookingLink)"
                 >
                     <i class="bi bi-copy me-2"></i>
-                    Copy Link
+                    {{ t('dashboard.copyLink') }}
                 </button>
             </div>
 
@@ -87,10 +92,10 @@ defineProps<{
         <div class="admin-card">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h4 class="fw-bold mb-1">Quick Actions</h4>
+                    <h4 class="fw-bold mb-1">{{ t('dashboard.quickActions') }}</h4>
 
                     <p class="text-muted mb-0">
-                        Start configuring your business.
+                        {{ t('dashboard.quickActionsDescription') }}
                     </p>
                 </div>
             </div>
@@ -105,10 +110,10 @@ defineProps<{
                             <i class="bi bi-briefcase fs-3 text-primary"></i>
                         </div>
 
-                        <h5 class="fw-bold">Create Services</h5>
+                        <h5 class="fw-bold">{{ t('dashboard.createServices') }}</h5>
 
                         <p class="text-muted mb-0">
-                            Add services customers can book online.
+                            {{ t('dashboard.createServicesDescription') }}
                         </p>
                     </div>
                 </div>
@@ -122,10 +127,10 @@ defineProps<{
                             <i class="bi bi-clock fs-3 text-primary"></i>
                         </div>
 
-                        <h5 class="fw-bold">Set Availability</h5>
+                        <h5 class="fw-bold">{{ t('dashboard.setAvailability') }}</h5>
 
                         <p class="text-muted mb-0">
-                            Configure working hours and appointment slots.
+                            {{ t('dashboard.setAvailabilityDescription') }}
                         </p>
                     </div>
                 </div>
@@ -139,10 +144,10 @@ defineProps<{
                             <i class="bi bi-whatsapp fs-3 text-primary"></i>
                         </div>
 
-                        <h5 class="fw-bold">WhatsApp Automation</h5>
+                        <h5 class="fw-bold">{{ t('dashboard.whatsappAutomation') }}</h5>
 
                         <p class="text-muted mb-0">
-                            Automate confirmations and reminders.
+                            {{ t('dashboard.whatsappAutomationDescription') }}
                         </p>
                     </div>
                 </div>

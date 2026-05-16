@@ -2,14 +2,32 @@ import '../css/app.css';
 import './bootstrap';
 import '../css/admin.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.rtl.min.css';
 import i18n from './i18n';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createApp, h } from 'vue';
+import { createApp, h, watch } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy/src/js';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+const setDirection = (locale: string) => {
+    const isRTL = ['ar', 'he'].includes(locale);
+
+    document.documentElement.lang = locale;
+    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+};
+
+setDirection(i18n.global.locale.value);
+
+watch(
+    () => i18n.global.locale.value,
+    (locale) => {
+        setDirection(locale);
+    }
+);
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

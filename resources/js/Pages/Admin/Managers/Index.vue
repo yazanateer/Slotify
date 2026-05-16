@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router} from '@inertiajs/vue3';
-
+import { useI18n } from 'vue-i18n';
 
 type Business = {
     id: number;
@@ -19,9 +19,10 @@ defineProps<{
     managers: Manager[];
 }>();
 
+const { t } = useI18n();
 
 const deleteManager = (id: number) => {
-    if (confirm('Are you sure you want to delete this manager?')) {
+    if (confirm(t('admin.managers.deleteConfirm'))) {
         router.delete(route('admin.managers.destroy', id));
     }
 }
@@ -30,17 +31,17 @@ const deleteManager = (id: number) => {
 </script>
 
 <template>
-    <Head title="Managers" />
+    <Head :title="t('admin.managers.title')" />  
     <AdminLayout>
         <template #title>
-            Managers
+            {{ t('admin.managers.title') }}
         </template>
 
        <div class="mb-4">
         <div>
-            <h3 class="fw-bold mb-1">Manager Accounts</h3>
+            <h3 class="fw-bold mb-1">{{ t('admin.managers.accounts') }}</h3>
             <p class="text-muted mb-0">
-                Create and manage business managers across Slotify.
+                {{ t('admin.managers.accountsDescription') }}
             </p>
         </div>
 
@@ -50,7 +51,7 @@ const deleteManager = (id: number) => {
                 class="admin-primary-btn"
             >
                 <i class="bi bi-person-plus me-2"></i>
-                Create Manager
+                {{ t('admin.managers.createManager') }}
             </Link>
         </div>
     </div>
@@ -59,10 +60,10 @@ const deleteManager = (id: number) => {
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Business</th>
-                        <th class="text-end">Actions</th>
+                        <th>{{ t('common.name') }}</th>
+                        <th>{{ t('common.email') }}</th>
+                        <th>{{ t('admin.businesses.business') }}</th>
+                        <th class="text-end">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
 
@@ -81,21 +82,21 @@ const deleteManager = (id: number) => {
                                 :href="route('admin.managers.edit', manager.id)"
                                 class="btn btn-sm btn-outline-primary me-2"
                             >
-                                Edit
+                                {{ t('common.edit') }}
                             </Link>
 
                             <button
                                 class="btn btn-sm btn-outline-danger"
                                 @click="deleteManager(manager.id)"
                             >
-                                Delete
+                                {{ t('common.delete') }}
                             </button>
                         </td>
                     </tr>
 
                     <tr v-if="managers.length === 0">
                         <td colspan="4" class="text-center text-muted py-4">
-                            No managers created yet.
+                            {{ t('admin.managers.empty') }}
                         </td>
                     </tr>
                 </tbody>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 type Business = {
     id: number;
@@ -10,6 +11,8 @@ type Business = {
 defineProps<{
     businesses: Business[];
 }>();
+
+const { t } = useI18n();
 
 const form = useForm({
     name: '',
@@ -25,17 +28,17 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Create Manager" />
+    <Head :title="t('admin.managers.createManager')" />
 
     <AdminLayout>
         <template #title>
-            Create Manager
+            {{ t('admin.managers.createManager') }}
         </template>
 
         <div class="admin-card">
             <form @submit.prevent="submit">
                 <div class="admin-form-group">
-                    <label class="admin-label">Manager Name</label>
+                    <label class="admin-label">{{t('admin.managers.managerName')}}</label>
                     <input v-model="form.name" type="text" class="admin-input" />
                     <div v-if="form.errors.name" class="text-danger small mt-1">
                         {{ form.errors.name }}
@@ -43,7 +46,7 @@ const submit = () => {
                 </div>
 
                 <div class="admin-form-group">
-                    <label class="admin-label">Email</label>
+                    <label class="admin-label">{{ t('common.email')}}</label>
                     <input v-model="form.email" type="email" class="admin-input" />
                     <div v-if="form.errors.email" class="text-danger small mt-1">
                         {{ form.errors.email }}
@@ -51,7 +54,7 @@ const submit = () => {
                 </div>
 
                 <div class="admin-form-group">
-                    <label class="admin-label">Phone</label>
+                    <label class="admin-label">{{ t('common.phone') }}</label>
                     <input
                         v-model="form.phone"
                         type="text"
@@ -64,7 +67,7 @@ const submit = () => {
                 </div>
 
                 <div class="admin-form-group">
-                    <label class="admin-label">Password</label>
+                    <label class="admin-label">{{ t('common.password') }}</label>
                     <input v-model="form.password" type="password" class="admin-input" />
                     <div v-if="form.errors.password" class="text-danger small mt-1">
                         {{ form.errors.password }}
@@ -72,9 +75,9 @@ const submit = () => {
                 </div>
 
                 <div class="admin-form-group">
-                    <label class="admin-label">Business</label>
+                    <label class="admin-label">{{ t('admin.businesses.business') }}</label>
                     <select v-model="form.business_id" class="admin-input">
-                        <option value="">Select business</option>
+                        <option value="">{{ t('admin.businesses.selectBusiness') }}</option>
                         <option
                             v-for="business in businesses"
                             :key="business.id"
@@ -90,11 +93,11 @@ const submit = () => {
 
                 <div class="d-flex gap-2 mt-4">
                     <button class="admin-primary-btn" :disabled="form.processing">
-                        Create Manager
+                        {{ t('admin.managers.createManager') }}
                     </button>
 
                     <Link :href="route('admin.managers.index')" class="btn btn-light">
-                        Cancel
+                        {{ t('common.cancel') }}
                     </Link>
                 </div>
             </form>

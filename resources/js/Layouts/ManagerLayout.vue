@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 const page = usePage();
-
+const { t, locale } = useI18n();
 const navItems = [
-    { label: 'Dashboard', routeName: 'dashboard', icon: 'bi-grid-1x2' },
-    { label: 'Appointments', routeName: 'dashboard.appointments.index', icon: 'bi-calendar-check' },
-    { label: 'Services', routeName: 'dashboard.services.index', icon: 'bi-briefcase' },
-    { label: 'Availability', routeName: 'dashboard.availability.index', icon: 'bi-clock' },
-    // { label: 'Booking Link', routeName: 'dashboard', icon: 'bi-link-45deg' },
+    { labelKey: 'manager.nav.dashboard', routeName: 'dashboard', icon: 'bi-grid-1x2' },
+    { labelKey: 'manager.nav.appointments', routeName: 'dashboard.appointments.index', icon: 'bi-calendar-check' },
+    { labelKey: 'manager.nav.services', routeName: 'dashboard.services.index', icon: 'bi-briefcase' },
+    { labelKey: 'manager.nav.availability', routeName: 'dashboard.availability.index', icon: 'bi-clock' },
 ];
 
 const isActive = (routeName: string) => {
     return route().current(routeName);
+};
+
+const changeLanguage = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+
+    locale.value = target.value;
+
+    localStorage.setItem('locale', target.value);
 };
 </script>
 
@@ -26,20 +34,20 @@ const isActive = (routeName: string) => {
 
                 <div>
                     <h1>Slotify</h1>
-                    <span>Business Dashboard</span>
+                    <span>{{t('manager.businessDashboard')}}</span>
                 </div>
             </div>
 
             <nav class="admin-nav">
                 <Link
                     v-for="item in navItems"
-                    :key="item.label"
+                    :key="item.labelKey"
                     :href="route(item.routeName)"
                     class="admin-nav-link"
                     :class="{ active: isActive(item.routeName) }"
                 >
                     <i :class="['bi', item.icon]"></i>
-                    <span>{{ item.label }}</span>
+                    <span>{{ t(item.labelKey) }}</span>
                 </Link>
             </nav>
 
@@ -51,7 +59,7 @@ const isActive = (routeName: string) => {
 
                     <div>
                         <strong>{{ page.props.auth.user.name }}</strong>
-                        <small>Business Manager</small>
+                        <small>{{t('manager.businessManager')}}</small>
                     </div>
                 </div>
 
@@ -61,7 +69,7 @@ const isActive = (routeName: string) => {
                     as="button"
                     class="admin-logout-btn"
                 >
-                    Logout
+                    {{t('common.logout')}}
                 </Link>
             </div>
         </aside>
@@ -69,15 +77,24 @@ const isActive = (routeName: string) => {
         <main class="admin-main">
             <header class="admin-topbar">
                 <div>
-                    <p class="admin-eyebrow">Slotify Business Console</p>
+                    <p class="admin-eyebrow">{{t('manager.console')}}</p>
                     <h2>
-                        <slot name="title">Dashboard</slot>
+                        <slot name="title">{{t('manager.nav.dashboard')}}</slot>
                     </h2>
                 </div>
 
                 <div class="admin-topbar-actions">
+                    <select 
+                        class="admin-language-select"
+                        :value="locale"
+                        @change="changeLanguage"
+                        >
+                            <option value="en">EN</option>
+                            <option value="he">HE</option>
+                            <option value="ar">AR</option>
+                    </select>
                     <span class="admin-status-dot"></span>
-                    <span>Business Active</span>
+                    <span>{{t('manager.businessActive')}}</span>
                 </div>
             </header>
 
@@ -87,3 +104,17 @@ const isActive = (routeName: string) => {
         </main>
     </div>
 </template>
+
+
+<style scoped>
+
+.admin-language-select {
+    border: 1px solid #e5ecf6;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-weight: 700;
+    color: #071533;
+    outline: none;
+}
+</style>

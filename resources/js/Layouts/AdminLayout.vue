@@ -1,16 +1,25 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 const page = usePage();
-
+const { t, locale } = useI18n();
 const navItems = [
-    { label: 'Dashboard', routeName: 'admin.dashboard', icon: 'bi-grid-1x2' },
-    { label: 'Businesses', routeName: 'admin.businesses.index', icon: 'bi-building' },
-    { label: 'Managers', routeName: 'admin.managers.index', icon: 'bi-person-badge' },
+    { labelKey: 'admin.nav.dashboard', routeName: 'admin.dashboard', icon: 'bi-grid-1x2' },
+    { labelKey: 'admin.nav.businesses', routeName: 'admin.businesses.index', icon: 'bi-building' },
+    { labelKey: 'admin.nav.managers', routeName: 'admin.managers.index', icon: 'bi-person-badge' },
 ];
 
 const isActive = (routeName: string) => {
     return route().current(routeName);
+};
+
+const changeLanguage = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+
+    locale.value = target.value;
+
+    localStorage.setItem('locale', target.value);
 };
 </script>
 
@@ -37,7 +46,7 @@ const isActive = (routeName: string) => {
                     :class="{ active: isActive(item.routeName) }"
                 >
                     <i :class="['bi', item.icon]"></i>
-                    <span>{{ item.label }}</span>
+                    <span>{{ t(item.labelKey) }}</span>
                 </Link>
             </nav>
 
@@ -49,7 +58,7 @@ const isActive = (routeName: string) => {
 
                     <div>
                         <strong>{{ page.props.auth.user.name }}</strong>
-                        <small>Platform Admin</small>
+                        <small>{{t('admin.platformAdmin')}}</small>
                     </div>
                 </div>
 
@@ -59,23 +68,32 @@ const isActive = (routeName: string) => {
                     as="button"
                     class="admin-logout-btn"
                 >
-                    Logout
+                    {{t('common.logout')}}
                 </Link>
             </div>
         </aside>
 
         <main class="admin-main">
             <header class="admin-topbar">
+                <select 
+                        class="admin-language-select"
+                        :value="locale"
+                        @change="changeLanguage"
+                        >
+                            <option value="en">EN</option>
+                            <option value="he">HE</option>
+                            <option value="ar">AR</option>
+                    </select>
                 <div>
-                    <p class="admin-eyebrow">Slotify Admin Console</p>
+                    <p class="admin-eyebrow">{{t('admin.console')}}</p>
                     <h2>
-                        <slot name="title">Dashboard</slot>
+                        <slot name="title">{{t('admin.nav.dashboard')}}</slot>
                     </h2>
                 </div>
 
                 <div class="admin-topbar-actions">
                     <span class="admin-status-dot"></span>
-                    <span>System Online</span>
+                    <span>{{t('admin.systemOnline')}}</span>
                 </div>
             </header>
 
@@ -85,3 +103,16 @@ const isActive = (routeName: string) => {
         </main>
     </div>
 </template>
+
+<style scoped>
+
+.admin-language-select {
+    border: 1px solid #e5ecf6;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-weight: 700;
+    color: #071533;
+    outline: none;
+}
+</style>

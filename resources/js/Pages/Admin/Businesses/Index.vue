@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, router} from '@inertiajs/vue3'
-
+import { useI18n } from 'vue-i18n';
 
 type Business = {
     id: number;
@@ -16,29 +16,32 @@ defineProps<{
     businesses: Business[];
 }>();
 
+const { t } = useI18n();
+
 const deleteBusiness = (id: number) => {
-    if(confirm('Are you sure you want to delete this business?')) {
+    if(confirm(t('admin.businesses.deleteConfirm'))) {
         router.delete(route('admin.businesses.destroy', id))
     }
 }
+
 </script>
 
 
 <template>
-    <Head title="Businesses" />
+    <Head :title="t('admin.businesses.title')" />
 
     <AdminLayout>
         <template #title>
-            Businesses
+            {{ t('admin.businesses.title') }}
         </template>
 
         <div class="mb-4">
         <div class="d-flex justify-content-between align-items-start">
             <div>
-                <h3 class="fw-bold mb-1">Business Management</h3>
+                <h3 class="fw-bold mb-1">{{ t('admin.businesses.management') }}</h3>
 
                 <p class="text-muted mb-0">
-                    Create and manage businesses using the Slotify platform.
+                    {{ t('admin.businesses.managementDescription') }}
                 </p>
             </div>
         </div>
@@ -49,7 +52,7 @@ const deleteBusiness = (id: number) => {
                 class="admin-primary-btn"
             >
                 <i class="bi bi-plus-lg me-2"></i>
-                Create Business
+                {{ t('admin.businesses.createBusiness') }}
             </Link>
         </div>
     </div>
@@ -58,12 +61,12 @@ const deleteBusiness = (id: number) => {
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Booking Link</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th>{{ t('common.name') }}</th>
+                        <th>{{ t('admin.businesses.bookingLink') }}</th>
+                        <th>{{ t('common.phone') }}</th>
+                        <th>{{ t('common.email') }}</th>
+                        <th>{{ t('common.status') }}</th>
+                        <th class="text-end">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
 
@@ -87,7 +90,7 @@ const deleteBusiness = (id: number) => {
                                 class="admin-badge"
                                 :class="business.is_active ? 'admin-badge-success' : 'admin-badge-inactive'"
                             >
-                                {{ business.is_active ? 'Active' : 'Inactive' }}
+                                {{ business.is_active ? t('common.active') : t('common.inactive') }}
                             </span>
                         </td>
 
@@ -96,21 +99,21 @@ const deleteBusiness = (id: number) => {
                                 :href="route('admin.businesses.edit', business.id)"
                                 class="btn btn-sm btn-outline-primary me-2"
                             >
-                                Edit
+                                {{t('common.edit')}}
                             </Link>
 
                             <button
                                 class="btn btn-sm btn-outline-danger"
                                 @click="deleteBusiness(business.id)"
                             >
-                                Delete
+                                {{ t('common.delete') }}
                             </button>
                         </td>
                     </tr>
 
                     <tr v-if="businesses.length === 0">
                         <td colspan="6" class="text-center text-muted py-4">
-                            No businesses created yet.
+                            {{ t('admin.businesses.empty') }}
                         </td>
                     </tr>
                 </tbody>

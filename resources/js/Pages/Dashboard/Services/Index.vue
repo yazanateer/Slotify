@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ManagerLayout from '@/Layouts/ManagerLayout.vue';
 import { Head, Link, router} from '@inertiajs/vue3'
+import { useI18n } from 'vue-i18n';
 
 type Service = {
     id: number;
@@ -16,46 +17,29 @@ defineProps<{
     services: Service[];
 }>();
 
+const { t } = useI18n();
+
 const deleteService = (id: number) => {
-    if (confirm('Are you sure you want to delete this service?')) {
+    if (confirm(t('services.deleteConfirm'))) {
         router.delete(route('dashboard.services.destroy', id));
     }
 }
 </script>
 
 <template>
-    <Head title="Services" />
+    <Head :title="t('services.title')" />
     <ManagerLayout>
         <template #title>
-            Services
+            {{ t('services.title') }}
         </template>
-<!-- 
-        <div class="d-flex justify-content-between align-items-end mb-4">
-        <div>
-            <h3 class="fw-bold mb-1">Business Services</h3>
-
-            <p class="text-muted mb-0">
-                Manage services customers can book online.
-            </p>
-        </div>
-
-        <Link
-            :href="route('dashboard.services.create')"
-            class="admin-primary-btn"
-            style="margin-top: 28px;"
-        >
-            <i class="bi bi-plus-lg me-2"></i>
-            Create Service
-        </Link>
-    </div> -->
 
     <div class="mb-4">
     <div class="d-flex justify-content-between align-items-start">
         <div>
-            <h3 class="fw-bold mb-1">Business Services</h3>
+            <h3 class="fw-bold mb-1">{{ t('services.businessServices') }}</h3>
 
             <p class="text-muted mb-0">
-                Manage services customers can book online.
+                {{ t('services.description') }}
             </p>
         </div>
     </div>
@@ -66,7 +50,7 @@ const deleteService = (id: number) => {
             class="admin-primary-btn"
         >
             <i class="bi bi-plus-lg me-2"></i>
-            Create Service
+            {{ t('services.createService') }}
         </Link>
     </div>
 </div>
@@ -76,11 +60,11 @@ const deleteService = (id: number) => {
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Service</th>
-                        <th>Duration</th>
-                        <th>Price</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th>{{ t('services.service') }}</th>
+                        <th>{{ t('services.duration') }}</th>
+                        <th>{{ t('services.price') }}</th>
+                        <th>{{ t('common.status') }}</th>
+                        <th class="text-end">{{ t('common.actions') }}</th>
                     </tr>
                 </thead>
 
@@ -104,7 +88,7 @@ const deleteService = (id: number) => {
                         </td>
 
                         <td>
-                            {{ service.duration_minutes }} min
+                            {{ service.duration_minutes }} {{t('common.min')}}
                         </td>
 
                         <td>
@@ -116,8 +100,7 @@ const deleteService = (id: number) => {
                                 class="admin-badge"
                                 :class="service.is_active ? 'admin-badge-success' : 'admin-badge-inactive'"
                             >
-                                {{ service.is_active ? 'Active' : 'Inactive' }}
-                            </span>
+                                {{ service.is_active ? t('common.active') : t('common.inactive') }}                            </span>
                         </td>
 
                         <td class="text-end">
@@ -125,21 +108,21 @@ const deleteService = (id: number) => {
                                 :href="route('dashboard.services.edit', service.id)"
                                 class="btn btn-sm btn-outline-primary me-2"
                             >
-                                Edit
+                                {{ t('common.edit') }}
                             </Link>
 
                             <button
                                 class="btn btn-sm btn-outline-danger"
                                 @click="deleteService(service.id)"
                             >
-                                Delete
+                                {{ t('common.delete') }}
                             </button>
                         </td>
                     </tr>
 
                     <tr v-if="services.length === 0">
                         <td colspan="5" class="text-center text-muted py-4">
-                            No services created yet.
+                            {{ t('services.empty') }}
                         </td>
                     </tr>
                 </tbody>

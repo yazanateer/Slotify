@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ManagerLayout from '@/Layouts/ManagerLayout.vue';
 import { Head } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
 
 type Service = {
     id: number;
@@ -21,20 +22,22 @@ type Appointment = {
 defineProps<{
     appointments: Appointment[];
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
-    <Head title="Appointments" />
+    <Head :title="t('appointments.title')" />
 
     <ManagerLayout>
         <template #title>
-            Appointments
+            {{ t('appointments.title') }}
         </template>
 
         <div class="mb-4">
-            <h3 class="fw-bold mb-1">Appointments</h3>
+            <h3 class="fw-bold mb-1">{{ t('appointments.heading') }}</h3>
             <p class="text-muted mb-0">
-                View all bookings for your business.
+                {{ t('appointments.description') }}
             </p>
         </div>
 
@@ -42,11 +45,11 @@ defineProps<{
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Customer</th>
-                        <th>Service</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Status</th>
+                    <th>{{ t('appointments.customer') }}</th>
+                    <th>{{ t('appointments.service') }}</th>
+                    <th>{{ t('appointments.date') }}</th>
+                    <th>{{ t('appointments.time') }}</th>
+                    <th>{{ t('appointments.status') }}</th>
                     </tr>
                 </thead>
 
@@ -69,14 +72,14 @@ defineProps<{
 
                         <td>
                             <span class="admin-badge admin-badge-success">
-                                {{ appointment.status }}
+                                {{ t(`appointmentStatus.${appointment.status}`) }}
                             </span>
                         </td>
                     </tr>
 
                     <tr v-if="appointments.length === 0">
                         <td colspan="5" class="text-center text-muted py-4">
-                            No appointments yet.
+                        {{ t('appointments.noAppointments') }}
                         </td>
                     </tr>
                 </tbody>

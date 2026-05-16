@@ -3,6 +3,7 @@ import WeeklyAvailability from '@/Components/WeeklyAvailability.vue';
 import ManagerLayout from '@/Layouts/ManagerLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import '@/../../resources/css/Pages/Dashboard/Availability/index.css'
 
 type Day = {
@@ -34,6 +35,8 @@ const form = useForm({
 
 const today = new Date();
 
+const { t } = useI18n();
+
 const calYear = ref(today.getFullYear());
 const calMonth = ref(today.getMonth());
 const selectedDate = ref<number | null>(today.getDate());
@@ -54,7 +57,7 @@ const PRESETS = [
     { label: '9–5', start: '09:00', end: '17:00' },
     { label: '8–6', start: '08:00', end: '18:00' },
     { label: '10–3', start: '10:00', end: '15:00' },
-    { label: 'Half day AM', start: '09:00', end: '13:00' },
+    { label: t('availability.halfDayAM'), start: '09:00', end: '13:00' },
 ];
 
 const timeToMinutes = (time: string): number => {
@@ -273,31 +276,31 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
 </script>
 
 <template>
-    <Head title="Availability" />
+    <Head :title="t('availability.title')" />
 
     <ManagerLayout>
         <template #title>
-            Availability
+            {{ t('availability.title') }}
         </template>
 
         <div class="availability-page">
             <div class="availability-header">
                 <div>
-                    <h2>Working Hours</h2>
-                    <p>Set when customers can book appointments.</p>
+                    <h2>{{ t('availability.workingHours') }}</h2>
+                    <p>{{ t('availability.subtitle') }}</p>
                 </div>
 
                 <div class="availability-stats">
                     <div>
                         <strong>{{ openDaysCount }}</strong>
-                        <span>Open Days</span>
+                        <span>{{ t('availability.openDays') }}</span>
                     </div>
 
                     <div class="availability-stat-divider"></div>
 
                     <div>
                         <strong>{{ totalHoursLabel }}</strong>
-                        <span>Total / Week</span>
+                        <span>{{ t('availability.totalWeek') }}</span>
                     </div>
                 </div>
             </div>
@@ -355,12 +358,12 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                         <div class="availability-legend">
                             <span>
                                 <i class="availability-legend-dot availability-legend-dot--open"></i>
-                                Open
+                                {{ t('common.open') }}
                             </span>
 
                             <span>
                                 <i class="availability-legend-dot"></i>
-                                Closed
+                                {{ t('common.closed') }}
                             </span>
                         </div>
                     </div>
@@ -372,7 +375,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                         >
                             <div class="availability-editor-header">
                                 <div>
-                                    <span>Editing</span>
+                                    <span>{{ t('availability.editing') }}</span>
                                     <h3>{{ selectedDay.label }}</h3>
                                 </div>
 
@@ -386,7 +389,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                         <span class="availability-switch-thumb"></span>
                                     </span>
 
-                                    <small>{{ selectedDay.is_active ? 'Open' : 'Closed' }}</small>
+                                    <small>{{ selectedDay.is_active ? t('common.open') : t('common.closed') }}</small>
                                 </label>
                             </div>
 
@@ -394,7 +397,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                 <div v-if="selectedDay.is_active">
                                     <div class="availability-time-row">
                                         <div>
-                                            <label>Start Time</label>
+                                            <label>{{ t('availability.startTime') }}</label>
                                             <input
                                                 v-model="selectedDay.start_time"
                                                 type="time"
@@ -404,7 +407,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                         <span class="availability-time-separator"></span>
 
                                         <div>
-                                            <label>End Time</label>
+                                            <label>{{ t('availability.endTime') }}</label>
                                             <input
                                                 v-model="selectedDay.end_time"
                                                 type="time"
@@ -413,11 +416,11 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                     </div>
                                     <div class="availability-breaks">
                                         <div class="availability-breaks-header">
-                                            <span>Break Times</span>
+                                            <span>{{ t('availability.breakTimes') }}</span>
 
                                             <button type="button" @click="addBreak">
                                                 <i class="bi bi-plus-lg"></i>
-                                                Add Break
+                                                {{ t('availability.addBreak') }}
                                             </button>
                                         </div>
 
@@ -449,17 +452,17 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                                 </button>
                                                 <p v-if="isBreakInvalid(breakItem)" class="availability-break-error">
                                                     <i class="bi bi-exclamation-circle"></i>
-                                                    Invalid break time
+                                                    {{ t('availability.invalidBreakTime') }}
                                                 </p>
                                             </div>
                                         </div>
 
                                         <p v-else class="availability-break-empty">
-                                            No breaks added for this day.
+                                            {{ t('availability.noBreaks') }}
                                         </p>
                                     </div>
                                     <div class="availability-presets">
-                                        <span>Quick Set</span>
+                                        <span>{{ t('availability.quickSet') }}</span>
 
                                         <div>
                                             <button
@@ -479,7 +482,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                         @click="copyToAllOpenDays"
                                     >
                                         <i class="bi bi-copy"></i>
-                                        Apply these hours to all open days
+                                        {{ t('availability.applyToAllOpenDays') }}
                                     </button>
                                 </div>
                             </Transition>
@@ -488,7 +491,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                 v-if="!selectedDay.is_active"
                                 class="availability-closed-message"
                             >
-                                This day is marked as closed. Toggle open to set hours.
+                                {{ t('availability.closedMessage') }}
                             </div>
                         </div>
                     </Transition>
@@ -497,8 +500,8 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                 <div class="availability-right">
                     <div class="availability-card availability-weekly">
                         <div class="availability-weekly-header">
-                            <h3>Weekly Schedule</h3>
-                            <span>Click a day to edit</span>
+                            <h3>{{ t('availability.weeklySchedule') }}</h3>
+                            <span>{{ t('availability.clickDayToEdit') }}</span>
                         </div>
 
                         <WeeklyAvailability
@@ -515,7 +518,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                 class="availability-saved"
                             >
                                 <i class="bi bi-check-circle"></i>
-                                Saved successfully
+                                {{ t('availability.savedSuccessfully') }}
                             </span>
                         </Transition>
 
@@ -530,7 +533,7 @@ const isBreakEndInvalid = (breakItem: AvailabilityBreak) => {
                                 :class="form.processing ? 'bi-arrow-repeat' : 'bi-check-lg'"
                             ></i>
 
-                            {{ form.processing ? 'Saving...' : 'Save Availability' }}
+                            {{ form.processing ? t('common.saving') : t('availability.saveAvailability')}}
                         </button>
                     </div>
                 </div>
