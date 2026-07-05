@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import WeeklyAvailability from '@/Components/WeeklyAvailability.vue';
+import SpecialDatesAvailability from '@/Components/SpecialDatesAvailability.vue'
 import ManagerLayout from '@/Layouts/ManagerLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -578,55 +579,12 @@ const removeSpecialDate = (date: string) => {
                     
                     -->
 
-                    <div class="availability-card">
-                        <div class="availability-weekly-header">
-                            <h3>Special Dates</h3>
-                            <span>Override availability for one specific date only.</span>
-                        </div>
-
-                        <button
-                            type="button"
-                            class="availability-copy-btn"
-                            :disabled="!selectedFullDate"
-                            @click="addSpecialDate"
-                        >
-                            <i class="bi bi-calendar-plus"></i>
-                            Add selected date as special date
-                        </button>
-
-                        <div class="mt-3" v-if="form.dateOverrides.length > 0">
-                            <div
-                                v-for="override in form.dateOverrides"
-                                :key="override.date"
-                                class="availability-break-item"
-                            >
-                                <strong>{{ override.date }}</strong>
-
-                                <label class="availability-switch">
-                                    <input v-model="override.is_active" type="checkbox" />
-                                    <span class="availability-switch-track">
-                                        <span class="availability-switch-thumb"></span>
-                                    </span>
-                                </label>
-
-                                <input
-                                    v-if="override.is_active"
-                                    v-model="override.start_time"
-                                    type="time"
-                                />
-
-                                <input
-                                    v-if="override.is_active"
-                                    v-model="override.end_time"
-                                    type="time"
-                                />
-
-                                <button type="button" @click="removeSpecialDate(override.date)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <SpecialDatesAvailability
+                        :date-overrides="form.dateOverrides"
+                        :selected-full-date="selectedFullDate"
+                        @add="addSpecialDate"
+                        @remove="removeSpecialDate"
+                    />
 
                     <div class="availability-save-row">
                         <Transition name="availability-fade">
