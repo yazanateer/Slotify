@@ -20,6 +20,7 @@ const props = defineProps<{
     branding: Branding;
     services: Service[];
     availabilityDays: number[];
+    bookingWindowDays: number;
 }>();
 
 const currentStep = ref<'booking' | 'details'>('booking');
@@ -160,7 +161,7 @@ const formatDate = (date: Date) => {
 
 const availablePage = ref(0);
 const availableDaysPerPage = 7;
-const availableSearchRange = 30;
+const availableSearchRange = props.bookingWindowDays;
 
 const allAvailableDays = computed(() => {
     const days = [];

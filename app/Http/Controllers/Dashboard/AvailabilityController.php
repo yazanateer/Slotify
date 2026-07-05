@@ -93,11 +93,15 @@ class AvailabilityController extends Controller
             'dateOverrides.*.is_active' => ['required', 'boolean'],
             'dateOverrides.*.start_time' => ['nullable', 'date_format:H:i'],
             'dateOverrides.*.end_time' => ['nullable', 'date_format:H:i'],
+
+            'booking_window_days' => ['required', 'integer', 'in:7,14,30,60,90'],
         ]);
 
         $business = auth()->user()->business;
         $businessId = $business->id;
-
+        $business->update([
+            'booking_window_days' => $validated['booking_window_days'],
+        ]);
         $daysByWeek = collect($validated['days'])->keyBy('day_of_week');
 
         foreach ($validated['breaks'] ?? [] as $break) {

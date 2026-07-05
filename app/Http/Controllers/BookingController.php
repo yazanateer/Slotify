@@ -24,6 +24,7 @@ class BookingController extends Controller
                 ->where('is_active', true)
                 ->pluck('day_of_week')
                 ->values(),
+            'bookingWindowDays' => $business->booking_window_days ?? 14,
             'branding' => $business->branding ? [
             ...$business->branding->toArray(),
             'logo_url' => $business->branding->logo_path

@@ -29,6 +29,7 @@ class Business extends Model
     'role',
     'business_id',
     'plan_id',
+    'booking_window_days',
     ];
 
     public function users() : HasMany

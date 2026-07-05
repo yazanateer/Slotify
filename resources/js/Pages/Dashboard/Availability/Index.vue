@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import WeeklyAvailability from '@/Components/WeeklyAvailability.vue';
-import SpecialDatesAvailability from '@/Components/SpecialDatesAvailability.vue'
+// import WeeklyAvailability from '@/Components/WeeklyAvailability.vue';
+import WeeklyScheduleCard from './components/WeeklyScheduleCard.vue'
+import CalendarExceptionsCard from './components/CalendarExceptionsCard.vue'
+import WeeklyDayEditor from './components/WeeklyDayEditor.vue'
+import StickySaveBar from './components/StickySaveBar.vue'
 import ManagerLayout from '@/Layouts/ManagerLayout.vue';
+import BookingWindowCard from './components/BookingWindowCard.vue'
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -14,12 +18,14 @@ const props = defineProps<{
     days: Day[];
     breaks: AvailabilityBreak[];
     dateOverrides: DateOverride[];
+    bookingWindowDays: number;
 }>();
 
 const form = useForm({
     days: props.days.map((day) => ({ ...day })),
     breaks: props.breaks.map((breakItem) => ({ ...breakItem })),
     dateOverrides: props.dateOverrides.map((override) => ({ ...override })),
+    booking_window_days: props.bookingWindowDays,
 });
 
 const today = new Date();
@@ -370,194 +376,34 @@ const removeSpecialDate = (date: string) => {
 
             <div class="availability-grid">
                 <div class="availability-left">
-                    <div class="availability-card availability-calendar">
-                        <div class="availability-calendar-header">
-                            <button type="button" @click="prevMonth">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-
-                            <h3>{{ monthNames[calMonth] }} {{ calYear }}</h3>
-
-                            <button type="button" @click="nextMonth">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
-
-                        <div class="availability-calendar-grid">
-                            <div
-                                v-for="weekday in weekdayNames"
-                                :key="weekday"
-                                class="availability-weekday"
-                            >
-                                {{ weekday }}
-                            </div>
-
-                            <button
-                                v-for="(cell, index) in calendarDays"
-                                :key="index"
-                                type="button"
-                                class="availability-day"
-                                :class="{
-                                    'availability-day--empty': !cell.date,
-                                    'availability-day--today': cell.date && isToday(cell),
-                                    'availability-day--selected': cell.date && isSelected(cell),
-                                    'availability-day--closed': cell.date && !isDayActive(cell.dow),
-                                }"
-                                :disabled="!cell.date"
-                                @click="selectDate(cell)"
-                            >
-                                <span v-if="cell.date">
-                                    {{ cell.date }}
-                                </span>
-
-                                <span
-                                    v-if="cell.date"
-                                    class="availability-day-dot"
-                                    :class="{ 'availability-day-dot--open': isDayActive(cell.dow) }"
-                                ></span>
-                            </button>
-                        </div>
-
-                        <div class="availability-legend">
-                            <span>
-                                <i class="availability-legend-dot availability-legend-dot--open"></i>
-                                {{ t('common.open') }}
-                            </span>
-
-                            <span>
-                                <i class="availability-legend-dot"></i>
-                                {{ t('common.closed') }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <Transition name="availability-slide">
-                        <div
-                            v-if="selectedDay"
-                            class="availability-card availability-editor"
-                        >
-                            <div class="availability-editor-header">
-                                <div>
-                                    <span>{{ t('availability.editing') }}</span>
-                                    <h3>{{ translatedDayName(selectedDay.label) }}</h3>
-                                </div>
-
-                                <label class="availability-switch">
-                                    <input
-                                        v-model="selectedDay.is_active"
-                                        type="checkbox"
-                                    />
-
-                                    <span class="availability-switch-track">
-                                        <span class="availability-switch-thumb"></span>
-                                    </span>
-
-                                    <small>{{ selectedDay.is_active ? t('common.open') : t('common.closed') }}</small>
-                                </label>
-                            </div>
-
-                            <Transition name="availability-fade">
-                                <div v-if="selectedDay.is_active">
-                                    <div class="availability-time-row">
-                                        <div>
-                                            <label>{{ t('availability.startTime') }}</label>
-                                            <input
-                                                v-model="selectedDay.start_time"
-                                                type="time"
-                                            />
-                                        </div>
-
-                                        <span class="availability-time-separator"></span>
-
-                                        <div>
-                                            <label>{{ t('availability.endTime') }}</label>
-                                            <input
-                                                v-model="selectedDay.end_time"
-                                                type="time"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div class="availability-breaks">
-                                        <div class="availability-breaks-header">
-                                            <span>{{ t('availability.breakTimes') }}</span>
-
-                                            <button type="button" @click="addBreak">
-                                                <i class="bi bi-plus-lg"></i>
-                                                {{ t('availability.addBreak') }}
-                                            </button>
-                                        </div>
-
-                                        <div v-if="selectedDayBreaks.length > 0" class="availability-break-list">
-                                            <div
-                                                v-for="(breakItem, index) in selectedDayBreaks"
-                                                :key="index"
-                                                class="availability-break-item"
-                                            >
-                                        <input
-                                            v-model="breakItem.start_time"
-                                            type="time"
-                                            :class="{ 'availability-input-error': isBreakStartInvalid(breakItem) }"
-                                        />
-
-                                                <span></span>
-
-                                        <input
-                                            v-model="breakItem.end_time"
-                                            type="time"
-                                            :class="{ 'availability-input-error': isBreakEndInvalid(breakItem) }"
-                                        />
-
-                                                <button
-                                                    type="button"
-                                                    @click="removeBreak(index)"
-                                                >
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                                <p v-if="isBreakInvalid(breakItem)" class="availability-break-error">
-                                                    <i class="bi bi-exclamation-circle"></i>
-                                                    {{ t('availability.invalidBreakTime') }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <p v-else class="availability-break-empty">
-                                            {{ t('availability.noBreaks') }}
-                                        </p>
-                                    </div>
-                                    <div class="availability-presets">
-                                        <span>{{ t('availability.quickSet') }}</span>
-
-                                        <div>
-                                            <button
-                                                v-for="preset in PRESETS"
-                                                :key="preset.label"
-                                                type="button"
-                                                @click="applyPreset(preset)"
-                                            >
-                                                {{ preset.label }}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        class="availability-copy-btn"
-                                        @click="copyToAllOpenDays"
-                                    >
-                                        <i class="bi bi-copy"></i>
-                                        {{ t('availability.applyToAllOpenDays') }}
-                                    </button>
-                                </div>
-                            </Transition>
-
-                            <div
-                                v-if="!selectedDay.is_active"
-                                class="availability-closed-message"
-                            >
-                                {{ t('availability.closedMessage') }}
-                            </div>
-                        </div>
-                    </Transition>
+                    
+                    <CalendarExceptionsCard
+                        :cal-year="calYear"
+                        :cal-month="calMonth"
+                        :month-name="monthNames[calMonth]"
+                        :weekday-names="weekdayNames"
+                        :calendar-days="calendarDays"
+                        :selected-date="selectedDate"
+                        :selected-full-date="selectedFullDate"
+                        :date-overrides="form.dateOverrides"
+                        :is-today="isToday"
+                        :is-selected="isSelected"
+                        :is-day-active="isDayActive"
+                        @prev-month="prevMonth"
+                        @next-month="nextMonth"
+                        @select-date="selectDate"
+                        @add-override="addSpecialDate"
+                        @remove-override="removeSpecialDate"
+                    />
+                    <WeeklyDayEditor
+                        :day="selectedDay"
+                        :breaks="selectedDayBreaks"
+                        :translated-day-name="translatedDayName"
+                        @add-break="addBreak"
+                        @remove-break="removeBreak"
+                        @apply-preset="applyPreset"
+                        @copy-to-open-days="copyToAllOpenDays"
+                        />
                 </div>
 
                 <div class="availability-right">
@@ -566,7 +412,8 @@ const removeSpecialDate = (date: string) => {
                             <h3>{{ t('availability.weeklySchedule') }}</h3>
                             <span>{{ t('availability.clickDayToEdit') }}</span>
                         </div>
-                        <WeeklyAvailability
+                        <BookingWindowCard v-model="form.booking_window_days" />        
+                        <WeeklyScheduleCard
                             :days="form.days"
                             :selected-day-index="selectedDayIndex"
                             :translated-day-name="translatedDayName"
@@ -574,43 +421,12 @@ const removeSpecialDate = (date: string) => {
                         />
                     </div>
 
-
-                    <!-- 
-                    
-                    -->
-
-                    <SpecialDatesAvailability
-                        :date-overrides="form.dateOverrides"
-                        :selected-full-date="selectedFullDate"
-                        @add="addSpecialDate"
-                        @remove="removeSpecialDate"
+                    <StickySaveBar
+                        :processing="form.processing"
+                        :saved="saved"
+                        :disabled="hasInvalidBreaks"
+                        @save="handleSave"
                     />
-
-                    <div class="availability-save-row">
-                        <Transition name="availability-fade">
-                            <span
-                                v-if="saved"
-                                class="availability-saved"
-                            >
-                                <i class="bi bi-check-circle"></i>
-                                {{ t('availability.savedSuccessfully') }}
-                            </span>
-                        </Transition>
-
-                        <button
-                            type="button"
-                            class="availability-save-btn"
-                            :disabled="form.processing || hasInvalidBreaks"
-                            @click="handleSave"
-                        >
-                            <i
-                                class="bi"
-                                :class="form.processing ? 'bi-arrow-repeat' : 'bi-check-lg'"
-                            ></i>
-
-                            {{ form.processing ? t('common.saving') : t('availability.saveAvailability')}}
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
