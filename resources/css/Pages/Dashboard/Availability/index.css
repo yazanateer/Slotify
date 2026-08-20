@@ -553,3 +553,142 @@
     border-color: #dc2626 !important;
     background: rgba(220, 38, 38, 0.04) !important;
 }
+
+.availability-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+    padding-bottom: 12px;
+}
+
+.availability-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 28px;
+}
+
+.availability-header__content {
+    min-width: 0;
+}
+
+.availability-header__eyebrow {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--slot-blue);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.availability-header h2 {
+    margin: 0;
+    color: var(--slot-text);
+    font-size: clamp(26px, 3vw, 36px);
+    font-weight: 950;
+    letter-spacing: -0.03em;
+}
+
+.availability-header p {
+    max-width: 650px;
+    margin: 8px 0 0;
+    color: var(--slot-muted);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.availability-stats {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 14px 20px;
+    border: 1px solid var(--slot-border);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 14px 36px rgba(7, 21, 51, 0.07);
+}
+
+.availability-stat {
+    min-width: 100px;
+    text-align: center;
+}
+
+.availability-stat strong {
+    display: block;
+    color: var(--slot-blue);
+    font-size: 25px;
+    font-weight: 950;
+    line-height: 1;
+}
+
+.availability-stat span {
+    display: block;
+    margin-top: 6px;
+    color: var(--slot-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.availability-stat-divider {
+    width: 1px;
+    height: 42px;
+    margin: 0 16px;
+    background: var(--slot-border);
+}
+
+.availability-section {
+    min-width: 0;
+}
+
+.availability-workspace {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.15fr)
+        minmax(360px, 0.85fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.availability-workspace__calendar,
+.availability-workspace__editor {
+    min-width: 0;
+}
+
+.availability-workspace__editor {
+    position: sticky;
+    top: 24px;
+}
+
+@media (max-width: 1180px) {
+    .availability-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .availability-workspace__editor {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .availability-page {
+        gap: 18px;
+    }
+
+    .availability-header {
+        flex-direction: column;
+    }
+
+    .availability-stats {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .availability-stat {
+        flex: 1;
+        min-width: 0;
+    }
+}

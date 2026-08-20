@@ -36,6 +36,7 @@ class AvailabilityController extends Controller
                 'is_active' => $availability?->is_active ?? false,
                 'start_time' => $availability?->start_time ? substr($availability->start_time, 0, 5) : '09:00',
                 'end_time' => $availability?->end_time ? substr($availability->end_time, 0, 5) : '17:00',
+                'bookingWindowDays' => $business->booking_window_days ?? 14,
             ];
         });
 

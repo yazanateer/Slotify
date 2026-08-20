@@ -20,6 +20,12 @@ class BookingController extends Controller
             'services' => $business->services()
                 ->where('is_active', true)
                 ->get(),
+            'dateOverrides' => $business->dateOverrides()
+                ->get(['date', 'is_active'])
+                ->map(fn ($override) => [
+                    'date' => $override->date,
+                    'is_active' => $override->is_active,
+                ]),
             'availabilityDays' => $business->availabilities()
                 ->where('is_active', true)
                 ->pluck('day_of_week')

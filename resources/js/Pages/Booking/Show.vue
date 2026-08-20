@@ -8,6 +8,11 @@ import BookingOtpModal from '../../Components/Booking/BookingOtpModal.vue';
 import { useI18n } from 'vue-i18n';
 import type { Branding, Business, Service, Slot} from '../../../js/types/global.d.ts'
 
+type DateOverride = {
+    date: string
+    is_active: boolean
+}
+
 const { t, locale } = useI18n()
 
 const showOtpModal = ref(false)
@@ -21,6 +26,7 @@ const props = defineProps<{
     services: Service[];
     availabilityDays: number[];
     bookingWindowDays: number;
+    dateOverrides: DateOverride[];
 }>();
 
 const currentStep = ref<'booking' | 'details'>('booking');
@@ -172,12 +178,22 @@ const allAvailableDays = computed(() => {
 
         const dayOfWeek = date.getDay();
 
-        if (!props.availabilityDays.includes(dayOfWeek)) {
+         const dateString = formatDate(date);
+
+        const override = props.dateOverrides.find(
+            (override) => override.date === dateString
+        );
+
+        const isAvailable = override
+            ? override.is_active
+            : props.availabilityDays.includes(dayOfWeek);
+
+        if (!isAvailable) {
             continue;
         }
 
         days.push({
-            date: formatDate(date),
+            date: dateString,
             dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
             dayNumber: date.getDate(),
             month: date.toLocaleDateString('en-US', { month: 'short' }),

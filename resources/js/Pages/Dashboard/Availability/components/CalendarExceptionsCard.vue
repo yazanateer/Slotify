@@ -39,6 +39,22 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+const dateForCell = (cell: CalendarCell) => {
+  if (!cell.date) return null
+
+  const month = String(props.calMonth + 1).padStart(2, '0')
+  const day = String(cell.date).padStart(2, '0')
+
+  return `${props.calYear}-${month}-${day}`
+}
+
+const overrideForCell = (cell: CalendarCell) => {
+  const date = dateForCell(cell)
+  if (!date) return null
+
+  return props.dateOverrides.find((override) => override.date === date) ?? null
+}
+
 const selectedOverride = computed(() => {
   if (!props.selectedFullDate) return null
 
@@ -47,14 +63,16 @@ const selectedOverride = computed(() => {
   ) ?? null
 })
 
-const hasOverride = (cell: CalendarCell) => {
-  if (!cell.date) return false
+const dayStatus = (cell: CalendarCell) => {
+  if (!cell.date) return 'empty'
 
-  const month = String(props.calMonth + 1).padStart(2, '0')
-  const day = String(cell.date).padStart(2, '0')
-  const date = `${props.calYear}-${month}-${day}`
+  const override = overrideForCell(cell)
 
-  return props.dateOverrides.some((override) => override.date === date)
+  if (override) {
+    return override.is_active ? 'override-open' : 'override-closed'
+  }
+
+  return props.isDayActive(cell.dow) ? 'weekly-open' : 'closed'
 }
 </script>
 
@@ -67,150 +85,154 @@ const hasOverride = (cell: CalendarCell) => {
       </div>
     </div>
 
-    <div class="calendar-exceptions-layout">
-      <div class="calendar-exceptions-calendar">
-        <div class="availability-calendar-header">
-          <button type="button" @click="emit('prev-month')">
-            <i class="bi bi-chevron-left"></i>
-          </button>
+    <div class="calendar-exceptions-body">
+      <div class="availability-calendar-header">
+        <button type="button" @click="emit('prev-month')">
+          <i class="bi bi-chevron-left"></i>
+        </button>
 
-          <h3>{{ monthName }} {{ calYear }}</h3>
+        <h3>{{ monthName }} {{ calYear }}</h3>
 
-          <button type="button" @click="emit('next-month')">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-        </div>
-
-        <div class="availability-calendar-grid">
-          <div
-            v-for="weekday in weekdayNames"
-            :key="weekday"
-            class="availability-weekday"
-          >
-            {{ weekday }}
-          </div>
-
-          <button
-            v-for="(cell, index) in calendarDays"
-            :key="index"
-            type="button"
-            class="availability-day"
-            :class="{
-              'availability-day--empty': !cell.date,
-              'availability-day--today': cell.date && isToday(cell),
-              'availability-day--selected': cell.date && isSelected(cell),
-              'availability-day--closed': cell.date && !isDayActive(cell.dow),
-              'availability-day--override': cell.date && hasOverride(cell),
-            }"
-            :disabled="!cell.date"
-            @click="emit('select-date', cell)"
-          >
-            <span v-if="cell.date">{{ cell.date }}</span>
-
-            <span
-              v-if="cell.date"
-              class="availability-day-dot"
-              :class="{
-                'availability-day-dot--open': isDayActive(cell.dow),
-                'availability-day-dot--override': hasOverride(cell),
-              }"
-            ></span>
-          </button>
-        </div>
-
-        <div class="availability-legend">
-          <span>
-            <i class="availability-legend-dot availability-legend-dot--open"></i>
-            {{ t('availability.weeklySchedule') }}
-          </span>
-
-          <span>
-            <i class="availability-legend-dot calendar-exceptions-dot"></i>
-            {{ t('availability.override') }}
-          </span>
-
-          <span>
-            <i class="availability-legend-dot"></i>
-            {{ t('common.closed') }}
-          </span>
-        </div>
+        <button type="button" @click="emit('next-month')">
+          <i class="bi bi-chevron-right"></i>
+        </button>
       </div>
 
-      <div class="calendar-exceptions-editor">
-        <template v-if="selectedFullDate">
-          <div class="calendar-exceptions-selected">
+      <div class="availability-calendar-grid">
+        <div
+          v-for="weekday in weekdayNames"
+          :key="weekday"
+          class="availability-weekday"
+        >
+          {{ weekday }}
+        </div>
+
+        <button
+          v-for="(cell, index) in calendarDays"
+          :key="index"
+          type="button"
+          class="availability-day"
+          :class="{
+            'availability-day--empty': !cell.date,
+            'availability-day--today': cell.date && isToday(cell),
+            'availability-day--selected': cell.date && isSelected(cell),
+            'availability-day--closed': dayStatus(cell) === 'closed',
+            'availability-day--override': dayStatus(cell) === 'override-open',
+            'availability-day--override-closed': dayStatus(cell) === 'override-closed',
+          }"
+          :disabled="!cell.date"
+          @click="emit('select-date', cell)"
+        >
+          <span v-if="cell.date">{{ cell.date }}</span>
+
+          <span
+            v-if="cell.date"
+            class="availability-day-dot"
+            :class="{
+              'availability-day-dot--open': dayStatus(cell) === 'weekly-open',
+              'availability-day-dot--override': dayStatus(cell) === 'override-open',
+              'availability-day-dot--closed': dayStatus(cell) === 'closed' || dayStatus(cell) === 'override-closed',
+            }"
+          ></span>
+        </button>
+      </div>
+
+      <div class="availability-legend">
+        <span>
+          <i class="availability-legend-dot availability-legend-dot--open"></i>
+          {{ t('availability.weeklySchedule') }}
+        </span>
+
+        <span>
+          <i class="availability-legend-dot calendar-exceptions-dot"></i>
+          {{ t('availability.override') }}
+        </span>
+
+        <span>
+          <i class="availability-legend-dot"></i>
+          {{ t('common.closed') }}
+        </span>
+      </div>
+    </div>
+
+    <div class="calendar-exceptions-editor">
+      <template v-if="selectedFullDate">
+        <div class="calendar-exceptions-editor-header">
+          <div>
             <span>{{ t('availability.selectedDate') }}</span>
             <h4>{{ selectedFullDate }}</h4>
           </div>
+        </div>
 
-          <template v-if="selectedOverride">
-            <div class="calendar-exceptions-status">
-              <label class="availability-switch">
-                <input v-model="selectedOverride.is_active" type="checkbox" />
+        <template v-if="selectedOverride">
+          <div class="calendar-exceptions-row">
+            <label class="availability-switch">
+              <input v-model="selectedOverride.is_active" type="checkbox" />
 
-                <span class="availability-switch-track">
-                  <span class="availability-switch-thumb"></span>
-                </span>
+              <span class="availability-switch-track">
+                <span class="availability-switch-thumb"></span>
+              </span>
 
-                <small>
-                  {{ selectedOverride.is_active ? t('common.open') : t('common.closed') }}
-                </small>
-              </label>
+              <small>
+                {{ selectedOverride.is_active ? t('common.open') : t('common.closed') }}
+              </small>
+            </label>
+          </div>
+
+          <div v-if="selectedOverride.is_active" class="calendar-exceptions-times">
+            <div>
+              <label>{{ t('availability.startTime') }}</label>
+              <input v-model="selectedOverride.start_time" type="time" />
             </div>
 
-            <div v-if="selectedOverride.is_active" class="calendar-exceptions-times">
-              <div>
-                <label>{{ t('availability.startTime') }}</label>
-                <input v-model="selectedOverride.start_time" type="time" />
-              </div>
-
-              <span></span>
-
-              <div>
-                <label>{{ t('availability.endTime') }}</label>
-                <input v-model="selectedOverride.end_time" type="time" />
-              </div>
+            <div>
+              <label>{{ t('availability.endTime') }}</label>
+              <input v-model="selectedOverride.end_time" type="time" />
             </div>
+          </div>
 
-            <button
-              type="button"
-              class="calendar-exceptions-remove"
-              @click="emit('remove-override', selectedOverride.date)"
-            >
-              <i class="bi bi-trash"></i>
-              {{ t('availability.removeOverride') }}
-            </button>
-          </template>
-
-          <template v-else>
-            <div class="calendar-exceptions-empty">
-              <i class="bi bi-calendar-check"></i>
-              <h4>{{ t('availability.usesWeeklySchedule') }}</h4>
-              <p>{{ t('availability.addOverrideDescription') }}</p>
-            </div>
-
-            <button
-              type="button"
-              class="calendar-exceptions-add"
-              @click="emit('add-override')"
-            >
-              <i class="bi bi-calendar-plus"></i>
-              {{ t('availability.overrideThisDate') }}
-            </button>
-          </template>
+          <button
+            type="button"
+            class="calendar-exceptions-remove"
+            @click="emit('remove-override', selectedOverride.date)"
+          >
+            <i class="bi bi-trash"></i>
+            {{ t('availability.removeOverride') }}
+          </button>
         </template>
 
-        <div v-else class="calendar-exceptions-empty">
-          <i class="bi bi-calendar-event"></i>
-          <h4>{{ t('availability.selectDate') }}</h4>
-          <p>{{ t('availability.selectDateDescription') }}</p>
-        </div>
+        <template v-else>
+          <div class="calendar-exceptions-empty">
+            <i class="bi bi-calendar-check"></i>
+            <h4>{{ t('availability.usesWeeklySchedule') }}</h4>
+            <p>{{ t('availability.addOverrideDescription') }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="calendar-exceptions-add"
+            @click="emit('add-override')"
+          >
+            <i class="bi bi-calendar-plus"></i>
+            {{ t('availability.overrideThisDate') }}
+          </button>
+        </template>
+      </template>
+
+      <div v-else class="calendar-exceptions-empty">
+        <i class="bi bi-calendar-event"></i>
+        <h4>{{ t('availability.selectDate') }}</h4>
+        <p>{{ t('availability.selectDateDescription') }}</p>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+.calendar-exceptions-card {
+  overflow: hidden;
+}
+
 .calendar-exceptions-header {
   margin-bottom: 24px;
 }
@@ -228,36 +250,23 @@ const hasOverride = (cell: CalendarCell) => {
   font-size: 14px;
 }
 
-.calendar-exceptions-layout {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.calendar-exceptions-calendar {
+.calendar-exceptions-body {
   min-width: 0;
 }
 
 .calendar-exceptions-editor {
+  margin-top: 26px;
   border: 1.5px solid var(--slot-border);
   border-radius: 22px;
   background: #f8fbff;
   padding: 22px;
-  min-height: 100%;
 }
 
-.availability-day--override {
-  border-color: #f59e0b;
-  background: #fffbeb;
+.calendar-exceptions-editor-header {
+  margin-bottom: 18px;
 }
 
-.availability-day-dot--override,
-.calendar-exceptions-dot {
-  background: #f59e0b !important;
-}
-
-.calendar-exceptions-selected span {
+.calendar-exceptions-editor-header span {
   display: block;
   color: var(--slot-muted);
   font-size: 12px;
@@ -267,22 +276,21 @@ const hasOverride = (cell: CalendarCell) => {
   margin-bottom: 6px;
 }
 
-.calendar-exceptions-selected h4 {
-  margin: 0 0 20px;
+.calendar-exceptions-editor-header h4 {
+  margin: 0;
   font-size: 24px;
   font-weight: 950;
   color: var(--slot-text);
 }
 
-.calendar-exceptions-status {
-  margin-bottom: 20px;
+.calendar-exceptions-row {
+  margin-bottom: 18px;
 }
 
 .calendar-exceptions-times {
   display: grid;
-  grid-template-columns: 1fr 24px 1fr;
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
 .calendar-exceptions-times label {
@@ -295,6 +303,7 @@ const hasOverride = (cell: CalendarCell) => {
 
 .calendar-exceptions-times input {
   width: 100%;
+  min-width: 0;
   height: 50px;
   border: 1.5px solid var(--slot-border);
   border-radius: 16px;
@@ -302,12 +311,6 @@ const hasOverride = (cell: CalendarCell) => {
   font-weight: 800;
   color: var(--slot-text);
   background: #fff;
-}
-
-.calendar-exceptions-times > span {
-  height: 2px;
-  background: var(--slot-border);
-  margin-bottom: 24px;
 }
 
 .calendar-exceptions-add,
@@ -337,15 +340,15 @@ const hasOverride = (cell: CalendarCell) => {
 
 .calendar-exceptions-empty {
   text-align: center;
-  padding: 34px 18px;
+  padding: 24px 18px;
   color: var(--slot-muted);
 }
 
 .calendar-exceptions-empty i {
   display: block;
-  font-size: 34px;
+  font-size: 30px;
   color: var(--slot-blue);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .calendar-exceptions-empty h4 {
@@ -360,10 +363,29 @@ const hasOverride = (cell: CalendarCell) => {
   font-size: 14px;
 }
 
-@media (max-width: 992px) {
-  .calendar-exceptions-layout {
-    grid-template-columns: 1fr;
-  }
+.availability-day--closed {
+  opacity: 0.45;
+}
+
+.availability-day--override {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  opacity: 1;
+}
+
+.availability-day--override-closed {
+  border-color: #f59e0b;
+  background: #fff7ed;
+  opacity: 0.65;
+}
+
+.availability-day-dot--override,
+.calendar-exceptions-dot {
+  background: #f59e0b !important;
+}
+
+.availability-day-dot--closed {
+  background: #cbd5e1 !important;
 }
 
 @media (max-width: 768px) {
@@ -373,10 +395,6 @@ const hasOverride = (cell: CalendarCell) => {
 
   .calendar-exceptions-times {
     grid-template-columns: 1fr;
-  }
-
-  .calendar-exceptions-times > span {
-    display: none;
   }
 }
 </style>
