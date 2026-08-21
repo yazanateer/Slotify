@@ -26,8 +26,8 @@ class ScheduleController extends Controller
             ->where('is_active', true)
             ->first();
 
-        $opensAt = $availability?->opens_at ?? '09:00';
-        $closesAt = $availability?->closes_at ?? '17:00';
+        $opensAt = $availability?->start_time ?? '09:00';
+        $closesAt = $availability?->end_time ?? '17:00';
 
         $appointments = Appointment::query()
             ->with('service')

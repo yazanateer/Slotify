@@ -24,7 +24,6 @@ Route::prefix('/book/{business:slug}')
     ->group(function () {
         Route::get('/', [BookingController::class, 'show'])->name('show');
         Route::get('/slots', [BookingController::class, 'slots'])->middleware('throttle:booking-slots')->name('slots');
-        Route::post('/appointments', [BookingController::class, 'store'])->middleware('throttle:booking-create')->name('appointments.store');
         Route::post('/verification/send', [BookingVerificationController::class, 'send'])->middleware('throttle:otp-send')->name('verification.send');
         Route::post('/verification/confirm', [BookingVerificationController::class, 'confirm'])->middleware('throttle:otp-confirm')->name('verification.confirm');
     });

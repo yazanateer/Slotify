@@ -25,9 +25,9 @@ class Business extends Model
     'email',
     'slug',
     'phone',
-    'password',
-    'role',
-    'business_id',
+    'address',
+    'timezone',
+    'is_active',
     'plan_id',
     'booking_window_days',
     ];

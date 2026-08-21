@@ -141,24 +141,6 @@ class BookingVerificationController extends Controller
         }
         $service = $verification->service;
         $status = $service->confirmation_mode === 'requires_approval' ? 'pending_approval' : 'confirmed';
-        // DB::transaction(function () use ($verification, $business, $status) {
-        //     Appointment::create([
-        //         'business_id' => $business->id,
-        //         'service_id' => $verification->service_id,
-        //         'appointment_date' => $verification->appointment_date,
-        //         'start_time' => $verification->start_time,
-        //         'end_time' => $verification->end_time,
-        //         'customer_name' => $verification->customer_name,
-        //         'customer_phone' => $verification->customer_phone,
-        //         'customer_email' => $verification->customer_email,
-        //         'status' => $status,
-        //         'confirmed_at' => $status === 'confirmed' ? now() : null,
-        //     ]);
-
-        //     $verification->update([
-        //         'verified_at' => now(),
-        //     ]);
-        // });
         $appointment = null;
 
         DB::transaction(function () use ($verification, $business, $status, &$appointment) {
