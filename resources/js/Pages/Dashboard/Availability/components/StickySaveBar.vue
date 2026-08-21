@@ -105,7 +105,10 @@ const emit = defineEmits<{
 
 @media (max-width: 768px) {
   .sticky-save-bar {
-    bottom: 12px;
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(78px + env(safe-area-inset-bottom));
   }
 
   .sticky-save-bar__content {

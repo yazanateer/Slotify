@@ -132,6 +132,16 @@ const currentLanguage = () => {
     <div class="admin-topbar-actions manager-topbar-actions">
         <span class="admin-status-dot"></span>
         <span>{{ t('manager.businessActive') }}</span>
+
+        <Link
+            :href="route('logout')"
+            method="post"
+            as="button"
+            class="mobile-logout-btn"
+            :aria-label="t('common.logout')"
+        >
+            <i class="bi bi-box-arrow-right"></i>
+        </Link>
     </div>
 </header>
 
@@ -139,5 +149,18 @@ const currentLanguage = () => {
                 <slot />
             </section>
         </main>
+
+        <nav class="mobile-bottom-nav">
+            <Link
+                v-for="item in navItems"
+                :key="item.labelKey"
+                :href="route(item.routeName)"
+                class="mobile-bottom-nav-link"
+                :class="{ active: isActive(item.routeName) }"
+            >
+                <i :class="['bi', item.icon]"></i>
+                <span>{{ t(item.labelKey) }}</span>
+            </Link>
+        </nav>
     </div>
 </template>

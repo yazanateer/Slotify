@@ -7,6 +7,7 @@ export default {
         edit: 'עריכה',
         delete: 'מחיקה',
         cancel: 'ביטול',
+        close: 'סגירה',
         logout: 'התנתקות',
         min: 'דק\'',
         save: 'שמירה',
@@ -294,6 +295,8 @@ pagination: {
         applyToAllOpenDays: 'החל שעות אלו על כל הימים הפתוחים',
         clickDayToEdit: 'לחץ על יום לעריכה',
         halfDayAM: 'חצי יום',
+        previousMonth: 'החודש הקודם',
+        nextMonth: 'החודש הבא',
     },
 
     dashboard: {

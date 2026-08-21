@@ -128,7 +128,13 @@ const options = [7, 14, 30, 60, 90]
 
 @media (max-width: 768px) {
   .booking-window-options {
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .booking-window-option {
+    flex: 0 1 100px;
   }
 }
 </style>

@@ -7,6 +7,7 @@ const props = defineProps<{
   day: Day | null
   breaks: AvailabilityBreak[]
   translatedDayName: (day: string) => string
+  mobileSheetOpen?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -14,6 +15,7 @@ const emit = defineEmits<{
   (e: 'remove-break', index: number): void
   (e: 'apply-preset', preset: { label: string; start: string; end: string }): void
   (e: 'copy-to-open-days'): void
+  (e: 'close'): void
 }>()
 
 const { t } = useI18n()
@@ -27,7 +29,23 @@ const presets = computed(() => [
 </script>
 
 <template>
-  <section class="availability-card weekly-day-editor">
+  <div
+    class="mobile-sheet-scrim"
+    :class="{ 'is-open': mobileSheetOpen }"
+    @click="emit('close')"
+  ></div>
+
+  <section class="availability-card weekly-day-editor mobile-sheet" :class="{ 'is-open': mobileSheetOpen }">
+    <button
+      v-if="day"
+      type="button"
+      class="mobile-sheet-close"
+      :aria-label="t('common.close')"
+      @click="emit('close')"
+    >
+      <i class="bi bi-x-lg"></i>
+    </button>
+
     <div v-if="day" class="weekly-day-editor__content">
       <div class="weekly-day-editor__header">
         <div>
@@ -96,6 +114,7 @@ const presets = computed(() => [
 
               <button
                 type="button"
+                :aria-label="t('availability.removeBreak')"
                 @click="emit('remove-break', index)"
               >
                 <i class="bi bi-trash"></i>

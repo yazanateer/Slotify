@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 type CalendarCell = {
@@ -38,6 +38,13 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+
+const mobileSheetOpen = ref(false)
+
+const handleSelectDate = (cell: CalendarCell) => {
+  emit('select-date', cell)
+  mobileSheetOpen.value = true
+}
 
 const dateForCell = (cell: CalendarCell) => {
   if (!cell.date) return null
@@ -87,13 +94,13 @@ const dayStatus = (cell: CalendarCell) => {
 
     <div class="calendar-exceptions-body">
       <div class="availability-calendar-header">
-        <button type="button" @click="emit('prev-month')">
+        <button type="button" :aria-label="t('availability.previousMonth')" @click="emit('prev-month')">
           <i class="bi bi-chevron-left"></i>
         </button>
 
         <h3>{{ monthName }} {{ calYear }}</h3>
 
-        <button type="button" @click="emit('next-month')">
+        <button type="button" :aria-label="t('availability.nextMonth')" @click="emit('next-month')">
           <i class="bi bi-chevron-right"></i>
         </button>
       </div>
@@ -121,7 +128,7 @@ const dayStatus = (cell: CalendarCell) => {
             'availability-day--override-closed': dayStatus(cell) === 'override-closed',
           }"
           :disabled="!cell.date"
-          @click="emit('select-date', cell)"
+          @click="handleSelectDate(cell)"
         >
           <span v-if="cell.date">{{ cell.date }}</span>
 
@@ -155,7 +162,23 @@ const dayStatus = (cell: CalendarCell) => {
       </div>
     </div>
 
-    <div class="calendar-exceptions-editor">
+    <div
+      class="mobile-sheet-scrim"
+      :class="{ 'is-open': mobileSheetOpen }"
+      @click="mobileSheetOpen = false"
+    ></div>
+
+    <div class="calendar-exceptions-editor mobile-sheet" :class="{ 'is-open': mobileSheetOpen }">
+      <button
+        v-if="selectedFullDate"
+        type="button"
+        class="mobile-sheet-close"
+        :aria-label="t('common.close')"
+        @click="mobileSheetOpen = false"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+
       <template v-if="selectedFullDate">
         <div class="calendar-exceptions-editor-header">
           <div>
@@ -382,10 +405,16 @@ const dayStatus = (cell: CalendarCell) => {
 .availability-day-dot--override,
 .calendar-exceptions-dot {
   background: #f59e0b !important;
+  border-radius: 2px !important;
+  transform: translateX(-50%) rotate(45deg) !important;
 }
 
 .availability-day-dot--closed {
-  background: #cbd5e1 !important;
+  width: 8px !important;
+  height: 2px !important;
+  bottom: 6px !important;
+  border-radius: 1px !important;
+  background: #b6c1d4 !important;
 }
 
 @media (max-width: 768px) {

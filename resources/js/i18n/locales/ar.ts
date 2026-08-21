@@ -7,6 +7,7 @@ export default {
         edit: 'تعديل',
         delete: 'حذف',
         cancel: 'إلغاء',
+        close: 'إغلاق',
         logout: 'تسجيل الخروج',
         min: 'دقيقة',
         save: 'حفظ',
@@ -292,6 +293,8 @@ pagination: {
         applyToAllOpenDays: 'تطبيق هذه الساعات على جميع الأيام المفتوحة',
         clickDayToEdit: 'انقر على يوم للتعديل',
         halfDayAM: 'نصف يوم',
+        previousMonth: 'الشهر السابق',
+        nextMonth: 'الشهر التالي',
     },
 
     dashboard: {
