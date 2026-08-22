@@ -824,8 +824,34 @@
     padding-top: 70px;
   }
 
+  .hero-content {
+    text-align: left !important;
+  }
+
+  .hero-content h1 {
+    font-size: 38px;
+  }
+
   .hero-content p {
-    font-size: 19px;
+    font-size: 15.5px;
+    max-width: none;
+    margin: 0 0 26px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .main-cta,
+  .secondary-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-mockup-wrap {
+    margin-top: 36px;
   }
 
   .mockup-body {
