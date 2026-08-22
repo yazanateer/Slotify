@@ -5,32 +5,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <section id="demo" class="mockup-section">
-    <div class="container">
-      <div class="phone-showcase">
-        <div class="phone-content">
-          <span class="section-mini">{{ t('landing.mockupShowcase.eyebrow') }}</span>
-          <h2>{{ t('landing.mockupShowcase.title') }}</h2>
-          <p>{{ t('landing.mockupShowcase.description') }}</p>
-
-          <div class="showcase-points">
-            <div>
-              <i class="bi bi-link-45deg"></i>
-              <span>{{ t('landing.mockupShowcase.points.bookingLink') }}</span>
-            </div>
-
-            <div>
-              <i class="bi bi-phone"></i>
-              <span>{{ t('landing.mockupShowcase.points.mobileFirst') }}</span>
-            </div>
-
-            <div>
-              <i class="bi bi-shield-check"></i>
-              <span>{{ t('landing.mockupShowcase.points.otp') }}</span>
-            </div>
-          </div>
-        </div>
-
+  <div id="demo" class="hero-mockup-wrap">
         <div class="iphone-frame">
           <div class="iphone-notch"></div>
 
@@ -145,7 +120,5 @@ const { t } = useI18n()
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
+  </div>
 </template>

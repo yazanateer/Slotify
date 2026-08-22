@@ -15,20 +15,6 @@ const plans: {
   features: string[]
 }[] = [
   {
-    key: 'basic',
-    price: '₪149',
-    popular: false,
-    icon: 'bi bi-lightning-charge',
-    features: [
-      'unlimitedAppointments',
-      'smsOtpVerification',
-      'onlineBookingPage',
-      'availabilityCalendar',
-      'automaticConfirmation',
-      'businessDashboard',
-    ],
-  },
-  {
     key: 'premium',
     price: '₪199',
     oldPrice: '₪249',
@@ -43,6 +29,20 @@ const plans: {
       'approveRejectAppointments',
       'businessDashboard',
       'customerNotifications',
+    ],
+  },
+  {
+    key: 'basic',
+    price: '₪149',
+    popular: false,
+    icon: 'bi bi-lightning-charge',
+    features: [
+      'unlimitedAppointments',
+      'smsOtpVerification',
+      'onlineBookingPage',
+      'availabilityCalendar',
+      'automaticConfirmation',
+      'businessDashboard',
     ],
   },
 

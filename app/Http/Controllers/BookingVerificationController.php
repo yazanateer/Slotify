@@ -26,7 +26,7 @@ class BookingVerificationController extends Controller
             'end_time' => ['required'],
             'customer_name' => ['required', 'string'],
             'customer_phone' => ['required', 'string', 'regex:/^(05\d{8}|\+9725\d{8})$/'],
-            'customer_email' => ['required', 'email'],
+            'customer_email' => ['nullable', 'email'],
         ]);
 
         $validated['customer_phone'] = $this->normalizeIsraeliPhone(

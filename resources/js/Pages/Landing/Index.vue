@@ -97,24 +97,26 @@ const submitContactForm = () => {
     <!-- Hero -->
     <section class="hero-section">
       <div class="hero-glow"></div>
+      <div class="hero-glow-blob hero-glow-blob--a"></div>
+      <div class="hero-glow-blob hero-glow-blob--b"></div>
 
       <div class="container text-center hero-content">
-        <div class="hero-badge">
+        <div class="hero-badge an-rise-1">
           <span></span>
           {{ t('landing.hero.badge') }}
         </div>
 
-        <h1>
+        <h1 class="an-rise-2">
           {{ t('landing.hero.titleLineOne') }}
           <br />
           {{ t('landing.hero.titleLineTwo') }}
         </h1>
 
-        <p>
+        <p class="an-rise-3">
           {{ t('landing.hero.description') }}
         </p>
 
-        <div class="hero-actions">
+        <div class="hero-actions an-rise-4">
           <a href="#contact" class="main-cta">
             {{ t('landing.hero.primaryCta') }}
             <span>{{ arrow }}</span>
@@ -125,11 +127,11 @@ const submitContactForm = () => {
             {{ t('landing.hero.secondaryCta') }}
           </a>
         </div>
+
+        <!-- Product mockup -->
+        <PhoneBookingMockup class="an-pop" />
       </div>
     </section>
-
-    <!-- Product mockup -->
-      <PhoneBookingMockup />
 
     <!-- Features -->
     <section id="features" class="section-block">

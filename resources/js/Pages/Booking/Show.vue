@@ -50,6 +50,16 @@ const selectedService = computed(() => {
     return props.services.find((service) => service.id === selectedServiceId.value) ?? null;
 });
 
+const mobileSummaryLine = computed(() => {
+    const parts = [
+        selectedService.value?.name,
+        selectedDate.value,
+        selectedSlot.value?.label,
+    ].filter(Boolean);
+
+    return parts.join(' · ');
+});
+
 const canLoadSlots = computed(() => {
     return selectedServiceId.value !== null && selectedDate.value !== '';
 });
@@ -496,8 +506,12 @@ const currentLanguage = () => {
                     <p>{{ t('booking.tryAnotherDate') }}</p>
                 </div>
 
-                <div class="booking-actions">
-                    <div>
+                <div class="booking-actions booking-slots-actions">
+                    <p v-if="selectedSlot" class="booking-selected-compact">
+                        {{ mobileSummaryLine }}
+                    </p>
+
+                    <div class="booking-actions-summary">
                         <p v-if="selectedService" class="booking-selected">
                             {{ t('booking.service') }}:
                             <strong>{{ selectedService.name }}</strong>
@@ -531,7 +545,7 @@ const currentLanguage = () => {
             </div>
 
             <BookingDetailsModal
-                v-if="currentStep === 'details'"
+                v-if="currentStep === 'details' && !showOtpModal"
                 v-model:customer-name="customerName"
                 v-model:customer-phone="customerPhone"
                 v-model:customer-email="customerEmail"
